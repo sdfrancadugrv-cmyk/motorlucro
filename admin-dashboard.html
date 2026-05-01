@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LaunchDash — Admin Panel</title>
+  <style>
+    :root {
+      --bg:     #070910;
+      --s1:     #0d1120;
+      --s2:     #141828;
+      --s3:     #1c2238;
+      --accent: #6366f1;
+      --green:  #10b981;
+      --red:    #f43f5e;
+      --yellow: #f59e0b;
+      --blue:   #38bdf8;
+      --purple: #a855f7;
+      --orange: #f97316;
+      --teal:   #14b8a6;
+      --text:   #f1f5f9;
+      --muted:  #64748b;
+      --muted2: #94a3b8;
+      --border: #1a2035;
+      --r:  12px;
+      --rs: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar layout ───────────────────────── */
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--s1);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-brand {
+      padding: 20px 16px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand-logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .brand-name {
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: -0.4px;
+    }
+    .brand-name span { color: var(--accent); }
+    .brand-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+    .sidebar-nav { padding: 12px 8px; flex: 1; }
+
+    .nav-section {
+      font-size: 9px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 6px 8px 4px;
+      margin-top: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: var(--rs);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted2);
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 2px;
+    }
+
+    .nav-item:hover { background: var(--s2); color: var(--text); }
+    .nav-item.active { background: rgba(99,102,241,.15); color: var(--accent); }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--s3);
+      color: var(--muted2);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 8px;
+    }
+    .nav-item.active .nav-badge { background: rgba(99,102,241,.25); color: var(--accent); }
+
+    .sidebar-footer {
+      padding: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-new-app {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--rs);
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.15s;
+    }
+    .btn-new-app:hover { opacity: 0.85; }
+
+    /* ── Main ─────────────────────────────────── */
+    .main { flex: 1; overflow: hidden; }
+
+    /* ── Top bar ──────────────────────────────── */
+    .topbar {
+      background: var(--s1);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .topbar h2 { font-size: 16px; font-weight: 800; flex: 1; }
+
+    .search-wrap {
+      position: relative;
+    }
+    .search-ico {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .search-input {
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: var(--rs);
+      padding: 8px 12px 8px 32px;
+      color: var(--text);
+      font-size: 13px;
+      width: 220px;
+    }
+    .search-input:focus { outline: none; border-color: var(--accent); }
+
+    /* ── KPIs ─────────────────────────────────── */
+    .kpi-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .kpi {
+      padding: 16px 24px;
+      border-right: 1px solid var(--border);
+    }
+    .kpi:last-child { border-right: none; }
+    .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); font-weight: 700; margin-bottom: 6px; }
+    .kpi-value { font-size: 24px; font-weight: 900; }
+    .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .kpi-value.green  { color: var(--green); }
+    .kpi-value.blue   { color: var(--blue); }
+    .kpi-value.purple { color: var(--purple); }
+    .kpi-value.yellow { color: var(--yellow); }
+
+    /* ── Filter row ───────────────────────────── */
+    .filter-row {
+      padding: 12px 24px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      background: var(--s1);
+    }
+
+    .pill {
+      padding: 5px 13px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--s2);
+      color: var(--muted2);
+      transition: all 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      user-select: none;
+    }
+    .pill:hover { background: var(--s3); color: var(--text); }
+    .pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── Content ──────────────────────────────── */
+    .content-area { padding: 20px 24px; }
+
+    /* ── Goal bar ─────────────────────────────── */
+    .goal-row {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .goal-text { min-width: 0; flex: 1; }
+    .goal-label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .goal-numbers { display: flex; align-items: baseline; gap: 5px; margin-bottom: 8px; }
+    .g-cur { font-size: 22px; font-weight: 900; color: var(--green); }
+    .g-sep { color: var(--muted); font-size: 16px; }
+    .g-tgt { font-size: 16px; font-weight: 700; color: var(--muted2); }
+    .goal-bar-bg { height: 5px; background: var(--s3); border-radius: 3px; overflow: hidden; }
+    .goal-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width .6s; }
+    .goal-pct { font-size: 11px; font-weight: 700; color: var(--muted2); white-space: nowrap; }
+    .goal-edit-btn {
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: var(--rs);
+      color: var(--muted2);
+      font-size: 12px;
+      padding: 6px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .goal-edit-btn:hover { color: var(--text); }
+
+    /* ── Grid ─────────────────────────────────── */
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 14px;
+    }
+
+    /* ── App Card ─────────────────────────────── */
+    .app-card {
+      background: var(--s1);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .app-card:hover { border-color: var(--s3); transform: translateY(-1px); }
+
+    .card-accent { height: 3px; }
+
+    .card-body { padding: 14px 16px; }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .app-icon {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .app-info { flex: 1; min-width: 0; }
+    .app-name-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 2px; }
+    .app-name { font-size: 15px; font-weight: 800; }
+
+    .status-badge {
+      font-size: 9px; font-weight: 800;
+      padding: 2px 7px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      cursor: pointer; user-select: none;
+      flex-shrink: 0;
+    }
+    .s-live     { background: rgba(16,185,129,.2);  color: var(--green); }
+    .s-dev      { background: rgba(245,158,11,.2);  color: var(--yellow); }
+    .s-draft    { background: rgba(100,116,139,.2); color: var(--muted2); }
+    .s-internal { background: rgba(99,102,241,.2);  color: var(--accent); }
+    .s-archived { background: rgba(244,63,94,.15);  color: var(--red); }
+
+    .stack-badge {
+      font-size: 9px; font-weight: 700;
+      padding: 2px 6px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .stack-html  { background: rgba(249,115,22,.15); color: var(--orange); }
+    .stack-next  { background: rgba(148,163,184,.1); color: var(--muted2); }
+    .stack-rn    { background: rgba(56,189,248,.15); color: var(--blue); }
+    .stack-node  { background: rgba(16,185,129,.15); color: var(--green); }
+
+    .app-desc { font-size: 12px; color: var(--muted2); line-height: 1.5; }
+    .app-path { font-size: 10px; color: var(--muted); margin-top: 4px; font-family: monospace; }
+
+    /* Metrics */
+    .card-metrics {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .met {
+      background: var(--s2);
+      border-radius: 6px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .met-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 700; margin-bottom: 3px; }
+    .met-val { font-size: 14px; font-weight: 800; }
+    .mv-green  { color: var(--green); }
+    .mv-blue   { color: var(--blue); }
+    .mv-yellow { color: var(--yellow); }
+
+    .subs-input {
+      background: none; border: none; color: inherit;
+      font-size: inherit; font-weight: inherit;
+      text-align: center; width: 100%; font-family: inherit;
+      outline: none; cursor: text;
+    }
+    .subs-input:focus { color: var(--blue); }
+
+    /* Dev command */
+    .cmd-row {
+      background: var(--s2);
+      border-radius: 6px;
+      padding: 7px 10px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--muted2);
+    }
+    .cmd-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cmd-copy {
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 13px; flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .cmd-copy:hover { color: var(--text); }
+
+    /* Actions */
+    .card-actions { display: flex; gap: 7px; }
+
+    .btn-launch {
+      flex: 1; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--rs);
+      padding: 8px; font-size: 12px; font-weight: 700;
+      cursor: pointer; text-align: center; text-decoration: none;
+      display: flex; align-items: center; justify-content: center;
+      gap: 5px; transition: opacity 0.15s;
+    }
+    .btn-launch:hover { opacity: 0.85; }
+    .btn-launch.disabled { opacity: 0.4; cursor: default; }
+
+    .btn-icon {
+      background: var(--s2); border: 1px solid var(--border);
+      border-radius: var(--rs); padding: 8px 11px;
+      font-size: 13px; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-icon:hover { background: var(--s3); }
+    .btn-icon.del:hover { background: rgba(244,63,94,.15); }
+
+    /* ── Revenue chart ────────────────────────── */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: 24px 0 12px;
+    }
+    .section-title { font-size: 12px; font-weight: 800; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .chart-card {
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px;
+    }
+    .chart-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 9px;
+    }
+    .chart-row:last-child { margin-bottom: 0; }
+    .chart-name { font-size: 12px; font-weight: 600; width: 130px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chart-wrap { flex: 1; height: 20px; background: var(--s2); border-radius: 4px; overflow: hidden; }
+    .chart-fill {
+      height: 100%; border-radius: 4px;
+      display: flex; align-items: center; padding-left: 8px;
+      font-size: 10px; font-weight: 700; color: #fff;
+      white-space: nowrap; transition: width .6s ease;
+      min-width: 0;
+    }
+
+    /* ── Empty ────────────────────────────────── */
+    .empty { text-align: center; padding: 48px 20px; color: var(--muted2); grid-column: 1/-1; }
+    .empty .ico { font-size: 44px; margin-bottom: 12px; }
+
+    /* ── Modals ───────────────────────────────── */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.75); z-index: 50;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 22px;
+      width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;
+    }
+
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .modal-title { font-size: 16px; font-weight: 800; }
+    .modal-close { background: var(--s2); border: none; border-radius: 6px; color: var(--muted2); padding: 5px 10px; cursor: pointer; font-size: 16px; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; font-size: 10px; color: var(--muted2); margin-bottom: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+    input[type="text"], input[type="number"], input[type="url"], select, textarea {
+      width: 100%; background: var(--s2); border: 1px solid var(--border);
+      border-radius: var(--rs); padding: 10px 12px; color: var(--text);
+      font-size: 13px; -webkit-appearance: none; font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    select option { background: var(--s2); }
+    textarea { resize: vertical; min-height: 56px; }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+    .color-opts { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 4px; }
+    .cdot {
+      width: 26px; height: 26px; border-radius: 50%;
+      cursor: pointer; border: 2px solid transparent; transition: transform 0.15s;
+    }
+    .cdot.sel { border-color: #fff; transform: scale(1.15); }
+
+    .btn-save {
+      width: 100%; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--rs);
+      padding: 12px; font-size: 14px; font-weight: 800;
+      cursor: pointer; margin-top: 6px; transition: opacity 0.15s;
+    }
+    .btn-save:hover { opacity: 0.85; }
+
+    /* ── Toast ────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--s1); border: 1px solid var(--border);
+      color: var(--text); padding: 10px 18px;
+      border-radius: 10px; font-size: 13px; font-weight: 700;
+      opacity: 0; transition: all 0.25s; z-index: 999;
+      transform: translateY(6px);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    small { font-size: 10px; color: var(--muted); }
+    .divider { height: 1px; background: var(--border); margin: 10px 0; }
+  </style>
+</head>
+<body>
+
+<!-- ── Add Modal ──────────────────────────────────────────────────────────── -->
+<div class="overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Project</div>
+      <button class="modal-close" onclick="closeModal('add-modal')">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Project Name</label>
+      <input type="text" id="f-name" placeholder="e.g. GigProfit Pro">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea id="f-desc" placeholder="Short description"></textarea>
+    </div>
+    <div class="row3">
+      <div class="form-group">
+        <label class="form-label">Icon</label>
+        <input type="text" id="f-icon" placeholder="🚀" maxlength="4">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stack</label>
+        <select id="f-stack">
+          <option value="HTML">HTML</option>
+          <option value="Next.js">Next.js</option>
+          <option value="React Native">React Native</option>
+          <option value="Node.js">Node.js</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <input type="text" id="f-cat" placeholder="SaaS, AI…">
+      </div>
+    </div>
+    <div class="row3">
+      <div class="form-group">
+        <label class="form-label">Price</label>
+        <input type="number" id="f-price" placeholder="37" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Currency</label>
+        <select id="f-currency">
+          <option value="USD">USD</option>
+          <option value="BRL">BRL</option>
+          <option value="EUR">EUR</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select id="f-status">
+          <option value="live">Live</option>
+          <option value="dev">In Dev</option>
+          <option value="draft">Draft</option>
+          <option value="internal">Internal</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">URL or File Path</label>
+      <input type="text" id="f-url" placeholder="myapp.html or https://...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dev Command (optional)</label>
+      <input type="text" id="f-cmd" placeholder="npm run dev">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Color</label>
+      <div class="color-opts" id="cp-add"></div>
+    </div>
+    <button class="btn-save" onclick="saveApp()">Add Project</button>
+  </div>
+</div>
+
+<!-- ── Edit Modal ─────────────────────────────────────────────────────────── -->
+<div class="overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Project</div>
+      <button class="modal-close" onclick="closeModal('edit-modal')">✕</button>
+    </div>
+    <input type="hidden" id="e-id">
+    <div class="form-group">
+      <label class="form-label">Project Name</label>
+      <input type="text" id="e-name">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea id="e-desc"></textarea>
+    </div>
+    <div class="row3">
+      <div class="form-group">
+        <label class="form-label">Icon</label>
+        <input type="text" id="e-icon" maxlength="4">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stack</label>
+        <select id="e-stack">
+          <option value="HTML">HTML</option>
+          <option value="Next.js">Next.js</option>
+          <option value="React Native">React Native</option>
+          <option value="Node.js">Node.js</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <input type="text" id="e-cat">
+      </div>
+    </div>
+    <div class="row3">
+      <div class="form-group">
+        <label class="form-label">Price</label>
+        <input type="number" id="e-price" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Currency</label>
+        <select id="e-currency">
+          <option value="USD">USD</option>
+          <option value="BRL">BRL</option>
+          <option value="EUR">EUR</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select id="e-status">
+          <option value="live">Live</option>
+          <option value="dev">In Dev</option>
+          <option value="draft">Draft</option>
+          <option value="internal">Internal</option>
+          <option value="archived">Archived</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">URL or File Path</label>
+      <input type="text" id="e-url">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dev Command</label>
+      <input type="text" id="e-cmd">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Color</label>
+      <div class="color-opts" id="cp-edit"></div>
+    </div>
+    <button class="btn-save" onclick="updateApp()">Save Changes</button>
+  </div>
+</div>
+
+<!-- ── Goal Modal ─────────────────────────────────────────────────────────── -->
+<div class="overlay" id="goal-modal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      <div class="modal-title">Monthly Revenue Goal</div>
+      <button class="modal-close" onclick="closeModal('goal-modal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Target MRR (USD)</label>
+      <input type="number" id="g-input" placeholder="e.g. 5000" min="0">
+    </div>
+    <button class="btn-save" onclick="saveGoal()">Set Goal</button>
+  </div>
+</div>
+
+<!-- ── Layout ─────────────────────────────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">🚀</div>
+      <div class="brand-name">Launch<span>Dash</span></div>
+      <div class="brand-sub">App portfolio admin</div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section">Views</div>
+      <div class="nav-item active" onclick="setFilter('all', this)">
+        <span>📦</span> All Projects
+        <span class="nav-badge" id="cnt-all">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('live', this)">
+        <span>🟢</span> Live
+        <span class="nav-badge" id="cnt-live">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('dev', this)">
+        <span>🔨</span> In Dev
+        <span class="nav-badge" id="cnt-dev">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('draft', this)">
+        <span>📝</span> Draft
+        <span class="nav-badge" id="cnt-draft">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('revenue', this)">
+        <span>💰</span> Revenue
+        <span class="nav-badge" id="cnt-revenue">0</span>
+      </div>
+
+      <div class="nav-section">Stack</div>
+      <div class="nav-item" onclick="setFilter('HTML', this)">
+        <span>🌐</span> HTML Apps
+        <span class="nav-badge" id="cnt-HTML">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('Next.js', this)">
+        <span>▲</span> Next.js
+        <span class="nav-badge" id="cnt-Next.js">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('React Native', this)">
+        <span>📱</span> Mobile
+        <span class="nav-badge" id="cnt-React Native">0</span>
+      </div>
+      <div class="nav-item" onclick="setFilter('Node.js', this)">
+        <span>⚙️</span> Node.js
+        <span class="nav-badge" id="cnt-Node.js">0</span>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="btn-new-app" onclick="openModal('add-modal')">
+        + Add Project
+      </button>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="topbar">
+      <h2 id="view-title">All Projects</h2>
+      <div class="search-wrap">
+        <span class="search-ico">🔍</span>
+        <input class="search-input" placeholder="Search projects…" id="search-input" oninput="render()">
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-bar">
+      <div class="kpi">
+        <div class="kpi-label">Monthly MRR</div>
+        <div class="kpi-value green" id="k-mrr">$0</div>
+        <div class="kpi-sub" id="k-mrr-sub">USD subscribers</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Subscribers</div>
+        <div class="kpi-value blue" id="k-subs">0</div>
+        <div class="kpi-sub">across all apps</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Projects</div>
+        <div class="kpi-value purple" id="k-total">0</div>
+        <div class="kpi-sub" id="k-total-sub">0 live</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Annual Run Rate</div>
+        <div class="kpi-value yellow" id="k-arr">$0</div>
+        <div class="kpi-sub">MRR × 12</div>
+      </div>
+    </div>
+
+    <!-- Content area -->
+    <div class="content-area">
+
+      <!-- Goal -->
+      <div class="goal-row">
+        <div class="goal-text">
+          <div class="goal-label">Monthly Revenue Goal</div>
+          <div class="goal-numbers">
+            <span class="g-cur" id="g-cur">$0</span>
+            <span class="g-sep">/</span>
+            <span class="g-tgt" id="g-tgt">$5,000</span>
+            <span class="goal-pct" id="g-pct" style="margin-left:8px">0%</span>
+          </div>
+          <div class="goal-bar-bg">
+            <div class="goal-bar-fill" id="g-bar" style="width:0%"></div>
+          </div>
+        </div>
+        <button class="goal-edit-btn" onclick="openGoalModal()">Edit Goal</button>
+      </div>
+
+      <!-- Project filters (mobile-friendly duplicate) -->
+      <div class="filter-row" id="filter-pills" style="padding: 0; border: none; background: none; margin-bottom: 14px; display: none;"></div>
+
+      <!-- Grid -->
+      <div class="apps-grid" id="apps-grid"></div>
+
+      <!-- Revenue chart -->
+      <div class="section-header">
+        <div class="section-title">Revenue Breakdown (USD)</div>
+      </div>
+      <div class="chart-card" id="revenue-chart">
+        <div style="text-align:center; padding: 20px; font-size:13px; color:var(--muted)">
+          Add subscribers to any paid app to see the revenue chart.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA — All 10 projects found on this machine
+// ─────────────────────────────────────────────────────────────────────────────
+const APPS_KEY = 'launchdash_v2';
+const GOAL_KEY = 'launchdash_goal_v2';
+
+const DISCOVERED_APPS = [
+  {
+    id: 1, name: 'GigProfit Pro', cat: 'SaaS Tool',
+    desc: 'Shift profit tracker for Uber, Lyft & DoorDash drivers — $37/mo subscription',
+    icon: '🚗', stack: 'HTML', price: 37, currency: 'USD', subs: 0,
+    status: 'live', color: '#6366f1', lang: 'EN',
+    url: 'gigprofit-pro.html', path: 'Desktop/gigprofit-pro.html', cmd: ''
+  },
+  {
+    id: 2, name: 'MotorLucro', cat: 'SaaS Tool',
+    desc: 'Controle financeiro de corridas por aplicativo para motoristas brasileiros',
+    icon: '🚘', stack: 'HTML', price: 0, currency: 'BRL', subs: 0,
+    status: 'live', color: '#10b981', lang: 'PT',
+    url: 'https://sdfrancadugrv-cmyk.github.io/motorlucro/', path: 'Desktop/motorlucro.html', cmd: ''
+  },
+  {
+    id: 3, name: 'VoxShell AI', cat: 'AI / SaaS',
+    desc: 'Plataforma de IA conversacional. Deploy ativo no Vercel',
+    icon: '🎙️', stack: 'Next.js', price: 0, currency: 'USD', subs: 0,
+    status: 'live', color: '#8b5cf6', lang: 'PT/EN',
+    url: 'https://voxshellai.vercel.app', path: 'Desktop/voxshellai/', cmd: 'cd voxshellai && npm run dev'
+  },
+  {
+    id: 4, name: 'Meu Estagiário', cat: 'B2B SaaS',
+    desc: 'Plataforma de gestão de estagiários — Next.js + Prisma + Auth',
+    icon: '🎓', stack: 'Next.js', price: 0, currency: 'BRL', subs: 0,
+    status: 'dev', color: '#0ea5e9', lang: 'PT',
+    url: '', path: 'Desktop/meu-estagiario/', cmd: 'cd meu-estagiario && npm run dev'
+  },
+  {
+    id: 5, name: 'Bruce', cat: 'Web App',
+    desc: 'Aplicação web Next.js + Prisma. Em desenvolvimento',
+    icon: '⚡', stack: 'Next.js', price: 0, currency: 'BRL', subs: 0,
+    status: 'dev', color: '#f43f5e', lang: 'PT',
+    url: '', path: 'Desktop/bruce/', cmd: 'cd bruce && npm run dev'
+  },
+  {
+    id: 6, name: 'Kadosh / Jow', cat: 'Education',
+    desc: 'Plataforma de serviços e educação com marketplace — Next.js + Prisma',
+    icon: '📚', stack: 'Next.js', price: 0, currency: 'BRL', subs: 0,
+    status: 'dev', color: '#f97316', lang: 'PT',
+    url: '', path: 'Desktop/Projeto Kadosh/Kadosh/Jow/', cmd: 'cd "Projeto Kadosh/Kadosh/Jow" && npm run dev'
+  },
+  {
+    id: 7, name: 'Uber Rancho', cat: 'Mobile App',
+    desc: 'App de transporte de compras em React Native + Backend Node.js',
+    icon: '🛒', stack: 'React Native', price: 0, currency: 'BRL', subs: 0,
+    status: 'dev', color: '#14b8a6', lang: 'PT',
+    url: '', path: 'Desktop/Uber Rancho/', cmd: 'cd "Uber Rancho/mobile" && npx expo start'
+  },
+  {
+    id: 8, name: 'Trading Bot Goetten', cat: 'Automation',
+    desc: 'Bot automático para Polarium Broker — Método Goetten (Playwright)',
+    icon: '📈', stack: 'Node.js', price: 0, currency: 'BRL', subs: 0,
+    status: 'dev', color: '#22c55e', lang: 'PT',
+    url: '', path: 'Desktop/trading-bot/', cmd: 'cd trading-bot && npm start'
+  },
+  {
+    id: 9, name: 'Lex — Agente Jurídico', cat: 'AI / Legal',
+    desc: 'Agente jurídico com IA para automação de petições e anúncios legais',
+    icon: '⚖️', stack: 'HTML', price: 0, currency: 'BRL', subs: 0,
+    status: 'draft', color: '#a855f7', lang: 'PT',
+    url: '../Documents/lex-ad-preview.html', path: 'Documents/lex-*.html', cmd: ''
+  },
+  {
+    id: 10, name: 'Projetos', cat: 'Internal',
+    desc: 'Painel de ideias e projetos pessoais',
+    icon: '💡', stack: 'HTML', price: 0, currency: 'BRL', subs: 0,
+    status: 'internal', color: '#f59e0b', lang: 'PT',
+    url: 'projetos.html', path: 'Desktop/projetos.html', cmd: ''
+  },
+];
+
+const COLORS = ['#6366f1','#10b981','#f59e0b','#f43f5e','#38bdf8','#a855f7','#ec4899','#14b8a6','#f97316','#22c55e'];
+const CURR   = { USD: '$', BRL: 'R$', EUR: '€' };
+const RATE   = { USD: 1, BRL: 0.18, EUR: 1.08 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STORAGE
+// ─────────────────────────────────────────────────────────────────────────────
+function loadApps() {
+  const s = localStorage.getItem(APPS_KEY);
+  if (s) return JSON.parse(s);
+  localStorage.setItem(APPS_KEY, JSON.stringify(DISCOVERED_APPS));
+  return DISCOVERED_APPS;
+}
+function storeApps(a) { localStorage.setItem(APPS_KEY, JSON.stringify(a)); }
+function loadGoal()    { return parseFloat(localStorage.getItem(GOAL_KEY) || '5000'); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────────────────────────────────────
+const N  = (n, d=0) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const $  = n => '$' + N(n);
+const toUSD = (v, c) => v * (RATE[c] || 1);
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FILTER STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let currentFilter = 'all';
+let currentNavEl  = null;
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  if (el) { el.classList.add('active'); currentNavEl = el; }
+  const titles = {
+    all: 'All Projects', live: 'Live Apps', dev: 'In Development',
+    draft: 'Drafts', revenue: 'Revenue Apps',
+    'HTML': 'HTML Apps', 'Next.js': 'Next.js Apps',
+    'React Native': 'Mobile Apps', 'Node.js': 'Node.js Projects'
+  };
+  document.getElementById('view-title').textContent = titles[f] || 'Projects';
+  render();
+}
+
+function filterApps(apps) {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  let filtered = apps;
+
+  if (currentFilter === 'revenue') {
+    filtered = apps.filter(a => a.price > 0);
+  } else if (['live','dev','draft','internal','archived'].includes(currentFilter)) {
+    filtered = apps.filter(a => a.status === currentFilter);
+  } else if (['HTML','Next.js','React Native','Node.js'].includes(currentFilter)) {
+    filtered = apps.filter(a => a.stack === currentFilter);
+  }
+
+  if (q) {
+    filtered = filtered.filter(a =>
+      a.name.toLowerCase().includes(q) ||
+      a.desc.toLowerCase().includes(q) ||
+      a.cat.toLowerCase().includes(q) ||
+      a.stack.toLowerCase().includes(q)
+    );
+  }
+  return filtered;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────────────────────────
+function render() {
+  const apps     = loadApps();
+  const filtered = filterApps(apps);
+
+  renderKPIs(apps);
+  renderGoal(apps);
+  renderBadges(apps);
+  renderGrid(filtered);
+  renderChart(apps);
+}
+
+function renderKPIs(apps) {
+  const totalMRR  = apps.reduce((s, a) => s + toUSD(a.price * (a.subs||0), a.currency), 0);
+  const totalSubs = apps.reduce((s, a) => s + (a.subs||0), 0);
+  const live      = apps.filter(a => a.status === 'live').length;
+
+  document.getElementById('k-mrr').textContent      = $(totalMRR);
+  document.getElementById('k-mrr-sub').textContent  = `from ${totalSubs} subscriber${totalSubs !== 1 ? 's' : ''}`;
+  document.getElementById('k-subs').textContent     = N(totalSubs);
+  document.getElementById('k-total').textContent    = apps.length;
+  document.getElementById('k-total-sub').textContent= `${live} live`;
+  document.getElementById('k-arr').textContent      = $(totalMRR * 12);
+}
+
+function renderGoal(apps) {
+  const mrr  = apps.reduce((s, a) => s + toUSD(a.price * (a.subs||0), a.currency), 0);
+  const goal = loadGoal();
+  const pct  = goal > 0 ? Math.min(100, (mrr / goal) * 100) : 0;
+
+  document.getElementById('g-cur').textContent = $(mrr);
+  document.getElementById('g-tgt').textContent = '$' + N(goal);
+  document.getElementById('g-pct').textContent = N(pct, 0) + '%';
+  document.getElementById('g-bar').style.width = pct.toFixed(1) + '%';
+}
+
+function renderBadges(apps) {
+  const counts = {
+    all: apps.length,
+    live:  apps.filter(a => a.status === 'live').length,
+    dev:   apps.filter(a => a.status === 'dev').length,
+    draft: apps.filter(a => a.status === 'draft').length,
+    revenue: apps.filter(a => a.price > 0).length,
+    'HTML':         apps.filter(a => a.stack === 'HTML').length,
+    'Next.js':      apps.filter(a => a.stack === 'Next.js').length,
+    'React Native': apps.filter(a => a.stack === 'React Native').length,
+    'Node.js':      apps.filter(a => a.stack === 'Node.js').length,
+  };
+  Object.entries(counts).forEach(([k, v]) => {
+    const el = document.getElementById('cnt-' + k);
+    if (el) el.textContent = v;
+  });
+}
+
+function renderGrid(apps) {
+  const grid = document.getElementById('apps-grid');
+
+  if (!apps.length) {
+    grid.innerHTML = `<div class="empty"><div class="ico">🔍</div><p>No projects match your search.</p></div>`;
+    return;
+  }
+
+  const STACK_CLASS = {
+    'HTML': 'stack-html', 'Next.js': 'stack-next',
+    'React Native': 'stack-rn', 'Node.js': 'stack-node'
+  };
+
+  grid.innerHTML = apps.map(a => {
+    const mrr     = a.price * (a.subs || 0);
+    const sym     = CURR[a.currency] || '$';
+    const hasUrl  = !!(a.url);
+    const mrrStr  = a.price > 0 ? `${sym}${N(mrr)}` : 'Free';
+    const priceStr= a.price > 0 ? `${sym}${N(a.price, 0)}/mo` : 'Free';
+    const statusClass = { live:'s-live', dev:'s-dev', draft:'s-draft', internal:'s-internal', archived:'s-archived' }[a.status] || 's-draft';
+    const statusLabel = { live:'Live', dev:'In Dev', draft:'Draft', internal:'Internal', archived:'Archived' }[a.status] || a.status;
+    const stackCls = STACK_CLASS[a.stack] || 'stack-html';
+
+    return `
+      <div class="app-card">
+        <div class="card-accent" style="background: ${a.color}"></div>
+        <div class="card-body">
+          <div class="card-top">
+            <div class="app-icon" style="background:${a.color}22; border:1px solid ${a.color}44;">
+              ${a.icon || '📦'}
+            </div>
+            <div class="app-info">
+              <div class="app-name-row">
+                <span class="app-name">${a.name}</span>
+                <span class="status-badge ${statusClass}" onclick="cycleStatus(${a.id})" title="Click to change">${statusLabel}</span>
+                <span class="stack-badge ${stackCls}">${a.stack}</span>
+              </div>
+              <div class="app-desc">${a.desc || ''}</div>
+              <div class="app-path">${a.path || ''}</div>
+            </div>
+          </div>
+
+          <div class="card-metrics">
+            <div class="met">
+              <div class="met-lbl">Price</div>
+              <div class="met-val mv-yellow">${priceStr}</div>
+            </div>
+            <div class="met">
+              <div class="met-lbl">Subs</div>
+              <div class="met-val mv-blue">
+                <input class="subs-input" type="number" min="0"
+                  value="${a.subs || 0}"
+                  onchange="updateSubs(${a.id}, this.value)"
+                  onblur="updateSubs(${a.id}, this.value)"
+                  title="Click to edit subscribers">
+              </div>
+            </div>
+            <div class="met">
+              <div class="met-lbl">MRR</div>
+              <div class="met-val mv-green">${mrrStr}</div>
+            </div>
+          </div>
+
+          ${a.cmd ? `
+          <div class="cmd-row">
+            <span>$</span>
+            <span class="cmd-text">${a.cmd}</span>
+            <button class="cmd-copy" onclick="copyCmd('${a.cmd.replace(/'/g,"\\'")}', this)" title="Copy command">📋</button>
+          </div>` : ''}
+
+          <div class="card-actions">
+            ${hasUrl
+              ? `<a class="btn-launch" href="${a.url}" target="${a.url.startsWith('http') ? '_blank' : '_self'}">🚀 Open App</a>`
+              : `<button class="btn-launch disabled" disabled>🔨 In Dev</button>`
+            }
+            <button class="btn-icon" onclick="openEditModal(${a.id})" title="Edit">✏️</button>
+            <button class="btn-icon del" onclick="deleteApp(${a.id})" title="Delete">🗑</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderChart(apps) {
+  const chart = document.getElementById('revenue-chart');
+  const paid  = apps.filter(a => a.price > 0 && (a.subs || 0) > 0);
+
+  if (!paid.length) {
+    chart.innerHTML = `<div style="text-align:center;padding:20px;font-size:13px;color:var(--muted)">Add subscribers to any paid app to see the revenue breakdown.</div>`;
+    return;
+  }
+
+  const maxMRR = Math.max(...paid.map(a => toUSD(a.price * a.subs, a.currency)));
+
+  chart.innerHTML = paid.map(a => {
+    const mrr = toUSD(a.price * a.subs, a.currency);
+    const pct = maxMRR > 0 ? (mrr / maxMRR) * 100 : 0;
+    return `
+      <div class="chart-row">
+        <div class="chart-name" title="${a.name}">${a.icon} ${a.name}</div>
+        <div class="chart-wrap">
+          <div class="chart-fill" style="width:${pct.toFixed(1)}%; background:${a.color}; min-width:${pct>0?'50px':'0'}">
+            ${pct > 15 ? '$' + N(mrr) + '/mo' : ''}
+          </div>
+        </div>
+        <span style="font-size:12px;font-weight:700;color:var(--green);white-space:nowrap">$${N(mrr)}</span>
+      </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ACTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+function updateSubs(id, val) {
+  const apps = loadApps();
+  const app  = apps.find(a => a.id === id);
+  if (!app) return;
+  app.subs = Math.max(0, parseInt(val) || 0);
+  storeApps(apps);
+  renderKPIs(apps);
+  renderGoal(apps);
+  renderChart(apps);
+}
+
+const STATUS_CYCLE = ['live','dev','draft','internal','archived'];
+function cycleStatus(id) {
+  const apps = loadApps();
+  const app  = apps.find(a => a.id === id);
+  if (!app) return;
+  const idx   = STATUS_CYCLE.indexOf(app.status);
+  app.status  = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
+  storeApps(apps);
+  render();
+  toast(`${app.name} → ${app.status}`);
+}
+
+function deleteApp(id) {
+  const apps = loadApps();
+  const app  = apps.find(a => a.id === id);
+  if (!confirm(`Delete "${app?.name}"?`)) return;
+  storeApps(apps.filter(a => a.id !== id));
+  render();
+  toast('Project deleted');
+}
+
+function copyCmd(cmd, btn) {
+  navigator.clipboard.writeText(cmd).then(() => {
+    btn.textContent = '✅';
+    setTimeout(() => (btn.textContent = '📋'), 1500);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COLOR PICKERS
+// ─────────────────────────────────────────────────────────────────────────────
+let addColor  = COLORS[0];
+let editColor = COLORS[0];
+
+function buildPicker(containerId, isEdit) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = COLORS.map(c =>
+    `<div class="cdot ${c === COLORS[0] ? 'sel' : ''}" data-color="${c}" style="background:${c}"></div>`
+  ).join('');
+
+  el.querySelectorAll('.cdot').forEach(d => {
+    d.addEventListener('click', () => {
+      el.querySelectorAll('.cdot').forEach(x => x.classList.remove('sel'));
+      d.classList.add('sel');
+      if (isEdit) editColor = d.dataset.color;
+      else addColor = d.dataset.color;
+    });
+  });
+}
+
+function setPickerColor(containerId, color, isEdit) {
+  const el = document.getElementById(containerId);
+  if (isEdit) editColor = color;
+  el.querySelectorAll('.cdot').forEach(d => {
+    d.classList.toggle('sel', d.dataset.color === color);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MODALS
+// ─────────────────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.overlay').forEach(el =>
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); })
+);
+
+function saveApp() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { toast('⚠️ Name required'); return; }
+
+  const apps = loadApps();
+  apps.push({
+    id:       Date.now(),
+    name,
+    desc:     document.getElementById('f-desc').value.trim(),
+    icon:     document.getElementById('f-icon').value.trim() || '📦',
+    stack:    document.getElementById('f-stack').value,
+    cat:      document.getElementById('f-cat').value.trim(),
+    price:    parseFloat(document.getElementById('f-price').value) || 0,
+    currency: document.getElementById('f-currency').value,
+    status:   document.getElementById('f-status').value,
+    url:      document.getElementById('f-url').value.trim(),
+    cmd:      document.getElementById('f-cmd').value.trim(),
+    color:    addColor,
+    path:     document.getElementById('f-url').value.trim(),
+    subs: 0,
+  });
+
+  storeApps(apps);
+  closeModal('add-modal');
+  ['f-name','f-desc','f-icon','f-cat','f-url','f-cmd','f-price'].forEach(i => (document.getElementById(i).value = ''));
+  render();
+  toast('✅ Project added!');
+}
+
+function openEditModal(id) {
+  const apps = loadApps();
+  const a    = apps.find(x => x.id === id);
+  if (!a) return;
+
+  document.getElementById('e-id').value       = id;
+  document.getElementById('e-name').value     = a.name;
+  document.getElementById('e-desc').value     = a.desc || '';
+  document.getElementById('e-icon').value     = a.icon || '';
+  document.getElementById('e-stack').value    = a.stack || 'HTML';
+  document.getElementById('e-cat').value      = a.cat || '';
+  document.getElementById('e-price').value    = a.price;
+  document.getElementById('e-currency').value = a.currency || 'USD';
+  document.getElementById('e-status').value   = a.status || 'dev';
+  document.getElementById('e-url').value      = a.url || '';
+  document.getElementById('e-cmd').value      = a.cmd || '';
+  setPickerColor('cp-edit', a.color || COLORS[0], true);
+
+  openModal('edit-modal');
+}
+
+function updateApp() {
+  const id   = parseInt(document.getElementById('e-id').value);
+  const apps = loadApps();
+  const idx  = apps.findIndex(a => a.id === id);
+  if (idx === -1) return;
+
+  const name = document.getElementById('e-name').value.trim();
+  if (!name) { toast('⚠️ Name required'); return; }
+
+  apps[idx] = {
+    ...apps[idx],
+    name,
+    desc:     document.getElementById('e-desc').value.trim(),
+    icon:     document.getElementById('e-icon').value.trim() || '📦',
+    stack:    document.getElementById('e-stack').value,
+    cat:      document.getElementById('e-cat').value.trim(),
+    price:    parseFloat(document.getElementById('e-price').value) || 0,
+    currency: document.getElementById('e-currency').value,
+    status:   document.getElementById('e-status').value,
+    url:      document.getElementById('e-url').value.trim(),
+    cmd:      document.getElementById('e-cmd').value.trim(),
+    color:    editColor,
+  };
+
+  storeApps(apps);
+  closeModal('edit-modal');
+  render();
+  toast('✅ Updated!');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GOAL
+// ─────────────────────────────────────────────────────────────────────────────
+function openGoalModal() {
+  document.getElementById('g-input').value = loadGoal();
+  openModal('goal-modal');
+}
+function saveGoal() {
+  const v = parseFloat(document.getElementById('g-input').value) || 0;
+  localStorage.setItem(GOAL_KEY, v.toString());
+  closeModal('goal-modal');
+  renderGoal(loadApps());
+  toast('Goal updated!');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+buildPicker('cp-add', false);
+buildPicker('cp-edit', true);
+
+// First-time: seed data if localStorage is empty
+if (!localStorage.getItem(APPS_KEY)) {
+  localStorage.setItem(APPS_KEY, JSON.stringify(DISCOVERED_APPS));
+}
+
+render();
+</script>
+</body>
+</html>
