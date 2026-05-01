@@ -1040,14 +1040,19 @@ function computedDays(period) {
   }
 
   return days.map(d => {
-    const tG = d.ganhos.reduce((s,e)=>s+e.valor,0);
-    const tC = d.comb.reduce((s,e)=>s+e.valor,0);
-    const tO = d.outros.reduce((s,e)=>s+e.valor,0);
-    const tGas = tC + tO;
-    return { ...d, tG, tC, tO, tGas, liq: tG - tGas,
+    const tG    = d.ganhos.reduce((s,e)=>s+e.valor,0);
+    const tC    = d.comb.reduce((s,e)=>s+e.valor,0);
+    const tO    = d.outros.reduce((s,e)=>s+e.valor,0);
+    const tGas  = tC + tO;
+    const km    = parseFloat(d.km)              || 0;
+    const cons  = parseFloat(d.consumo)         || 0;
+    const prec  = parseFloat(d.precoCombustivel)|| 0;
+    const ckm   = cons > 0 ? prec / cons : 0;
+    const cReal = ckm > 0 && km > 0 ? ckm * km : null;
+    const liq   = cReal !== null ? tG - cReal - tO : tG - tGas;
+    return { ...d, tG, tC, tO, tGas, liq,
              hApp:  parseFloat(d.horasApp)  || 0,
-             hReal: parseFloat(d.horasReal) || 0,
-             km:    parseFloat(d.km)        || 0 };
+             hReal: parseFloat(d.horasReal) || 0, km };
   }).filter(d => d.tG > 0 || d.tC > 0 || d.tO > 0 || d.km > 0);
 }
 
@@ -1262,14 +1267,16 @@ const ESCALAS = [
 
 function simDays() {
   return Object.values(loadDays()).map(d => {
-    const tG = d.ganhos.reduce((s,e)=>s+e.valor,0);
-    const tC = d.comb.reduce((s,e)=>s+e.valor,0);
-    const tO = d.outros.reduce((s,e)=>s+e.valor,0);
-    return {
-      tG, tGas: tC+tO, liq: tG-tC-tO,
-      hApp:  parseFloat(d.horasApp)  || 0,
-      hReal: parseFloat(d.horasReal) || 0,
-    };
+    const tG   = d.ganhos.reduce((s,e)=>s+e.valor,0);
+    const tC   = d.comb.reduce((s,e)=>s+e.valor,0);
+    const tO   = d.outros.reduce((s,e)=>s+e.valor,0);
+    const km   = parseFloat(d.km)               || 0;
+    const cons = parseFloat(d.consumo)          || 0;
+    const prec = parseFloat(d.precoCombustivel) || 0;
+    const ckm  = cons > 0 ? prec / cons : 0;
+    const cReal= ckm > 0 && km > 0 ? ckm * km : null;
+    const liq  = cReal !== null ? tG - cReal - tO : tG - tC - tO;
+    return { tG, liq, hApp: parseFloat(d.horasApp) || 0, hReal: parseFloat(d.horasReal) || 0 };
   }).filter(d => d.tG > 0);
 }
 
