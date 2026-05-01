@@ -515,13 +515,20 @@
       <div class="section-body">
         <div class="inp-row">
           <div>
-            <label class="inp-label">Horas no app (online)</label>
-            <input type="number" id="inp-happ" placeholder="Ex: 6" step="0.5" min="0" oninput="autoSave()">
+            <label class="inp-label">Início do serviço</label>
+            <input type="time" id="inp-inicio" oninput="autoSave()">
           </div>
           <div>
-            <label class="inp-label">Horas reais (total)</label>
-            <input type="number" id="inp-hreal" placeholder="Ex: 8" step="0.5" min="0" oninput="autoSave()">
+            <label class="inp-label">Fim do serviço</label>
+            <input type="time" id="inp-fim" oninput="autoSave()">
           </div>
+        </div>
+        <div id="hreal-display" style="margin-top:6px;display:none">
+          <span style="color:var(--blue);font-size:13px">Total: <b id="hreal-calc">—</b></span>
+        </div>
+        <div style="margin-top:10px">
+          <label class="inp-label">Horas no app (online)</label>
+          <input type="number" id="inp-happ" placeholder="Ex: 6" step="0.5" min="0" oninput="autoSave()">
         </div>
         <div style="margin-top:10px">
           <label class="inp-label">Km rodados</label>
@@ -539,7 +546,7 @@
         </div>
         <p class="inp-hint">
           <b style="color:var(--accent)">No app:</b> tempo ligado recebendo corridas &nbsp;·&nbsp;
-          <b style="color:var(--blue)">Real:</b> saída de casa até voltar
+          <b style="color:var(--blue)">Total:</b> calculado pelo horário de início e fim
         </p>
       </div>
     </div>
@@ -772,7 +779,7 @@ function saveDay(date, data) {
   saveDays(all);
 }
 function emptyDay(date) {
-  return { date, horasApp:'', horasReal:'', km:'', consumo:'', precoCombustivel:'', ganhos:[], comb:[], outros:[] };
+  return { date, horaInicio:'', horaFim:'', horasReal:0, horasApp:'', km:'', consumo:'', precoCombustivel:'', ganhos:[], comb:[], outros:[] };
 }
 function deleteDay(date) {
   const all = loadDays();
@@ -840,23 +847,51 @@ function renderDayPage() {
   document.getElementById('btn-next-day').disabled = isToday;
   document.getElementById('btn-goto-today').style.display = isToday ? 'none' : 'block';
 
+  document.getElementById('inp-inicio').value  = curDay.horaInicio       || '';
+  document.getElementById('inp-fim').value     = curDay.horaFim          || '';
   document.getElementById('inp-happ').value    = curDay.horasApp         || '';
-  document.getElementById('inp-hreal').value   = curDay.horasReal        || '';
   document.getElementById('inp-km').value      = curDay.km               || '';
   document.getElementById('inp-consumo').value = curDay.consumo          || '';
   document.getElementById('inp-preco').value   = curDay.precoCombustivel || '';
+  updateHrealDisplay();
 
   recalc(curDay);
 }
 
+function calcHorasReais(inicio, fim) {
+  if (!inicio || !fim) return 0;
+  const [ih, im] = inicio.split(':').map(Number);
+  const [fh, fm] = fim.split(':').map(Number);
+  let min = (fh * 60 + fm) - (ih * 60 + im);
+  if (min <= 0) min += 1440; // turno que passa da meia-noite
+  return +(min / 60).toFixed(2);
+}
+
+function updateHrealDisplay() {
+  const h  = parseFloat(curDay.horasReal) || 0;
+  const el = document.getElementById('hreal-display');
+  if (h > 0) {
+    const hh = Math.floor(h);
+    const mm = Math.round((h - hh) * 60);
+    document.getElementById('hreal-calc').textContent =
+      hh + 'h' + (mm > 0 ? mm + 'min' : '');
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
 // ── Auto-save (oninput) ────────────────────────────────────
 function autoSave() {
+  curDay.horaInicio       = document.getElementById('inp-inicio').value;
+  curDay.horaFim          = document.getElementById('inp-fim').value;
+  curDay.horasReal        = calcHorasReais(curDay.horaInicio, curDay.horaFim);
   curDay.horasApp         = document.getElementById('inp-happ').value;
-  curDay.horasReal        = document.getElementById('inp-hreal').value;
   curDay.km               = document.getElementById('inp-km').value;
   curDay.consumo          = document.getElementById('inp-consumo').value;
   curDay.precoCombustivel = document.getElementById('inp-preco').value;
   saveDay(curDate, curDay);
+  updateHrealDisplay();
   recalc(curDay);
 }
 
