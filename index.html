@@ -472,6 +472,11 @@
         <div class="stat-value red" id="h-gastos">R$ 0</div>
       </div>
       <div class="stat-card">
+        <div class="stat-label">Comb. real (km)</div>
+        <div class="stat-value red" id="h-comb-real">—</div>
+        <div class="stat-sub" id="h-comb-real-sub">custo × km rodados</div>
+      </div>
+      <div class="stat-card">
         <div class="stat-label">R$/h bruto</div>
         <div class="stat-value blue" id="h-h-bruto">—</div>
         <div class="stat-sub" id="h-h-bruto-sub">horas no app</div>
@@ -846,24 +851,40 @@ function recalc(d) {
   const hReal = parseFloat(d.horasReal) || 0;
   const km    = parseFloat(d.km)        || 0;
 
+  // Custo real de combustível = (preço/consumo) × km
+  const consumo       = parseFloat(d.consumo)          || 0;
+  const preco         = parseFloat(d.precoCombustivel) || 0;
+  const custoKm       = consumo > 0 ? preco / consumo : 0;
+  const custoRealComb = custoKm > 0 && km > 0 ? custoKm * km : null;
+  const liqReal       = custoRealComb !== null ? tG - custoRealComb - tO : liq;
+
   // Highlight
   const liqEl = document.getElementById('h-liquido');
-  liqEl.textContent = fR(liq);
-  liqEl.className   = 'hl-value' + (liq < 0 ? ' neg' : '');
+  liqEl.textContent = fR(liqReal);
+  liqEl.className   = 'hl-value' + (liqReal < 0 ? ' neg' : '');
 
   const sub = [];
-  if (tG   > 0) sub.push('Bruto ' + fR(tG));
-  if (tGas > 0) sub.push('Gastos ' + fR(tGas));
+  if (tG > 0) sub.push('Bruto ' + fR(tG));
+  if (custoRealComb !== null) sub.push('Comb. real ' + fR(custoRealComb));
+  else if (tGas > 0)          sub.push('Gastos ' + fR(tGas));
   document.getElementById('h-sub').textContent = sub.length ? sub.join(' · ') : 'Adicione um ganho para começar';
 
   // Stats
   document.getElementById('h-bruto').textContent  = fR(tG);
   document.getElementById('h-gastos').textContent = fR(tGas);
 
+  if (custoRealComb !== null) {
+    document.getElementById('h-comb-real').textContent     = fR(custoRealComb);
+    document.getElementById('h-comb-real-sub').textContent = fmt(km,0) + ' km × ' + fR(custoKm) + '/km';
+  } else {
+    document.getElementById('h-comb-real').textContent     = '—';
+    document.getElementById('h-comb-real-sub').textContent = 'custo × km rodados';
+  }
+
   if (hApp > 0) {
-    document.getElementById('h-h-bruto').textContent     = fR(tG  / hApp);
+    document.getElementById('h-h-bruto').textContent     = fR(tG      / hApp);
     document.getElementById('h-h-bruto-sub').textContent = hApp + 'h no app';
-    document.getElementById('h-h-liq').textContent       = fR(liq / hApp);
+    document.getElementById('h-h-liq').textContent       = fR(liqReal / hApp);
     document.getElementById('h-h-liq-sub').textContent   = hApp + 'h no app';
   } else {
     document.getElementById('h-h-bruto').textContent     = '—';
@@ -873,9 +894,9 @@ function recalc(d) {
   }
 
   if (hReal > 0) {
-    document.getElementById('h-h-bruto-real').textContent     = fR(tG  / hReal);
+    document.getElementById('h-h-bruto-real').textContent     = fR(tG      / hReal);
     document.getElementById('h-h-bruto-real-sub').textContent = hReal + 'h reais';
-    document.getElementById('h-h-liq-real').textContent       = fR(liq / hReal);
+    document.getElementById('h-h-liq-real').textContent       = fR(liqReal / hReal);
     document.getElementById('h-h-liq-real-sub').textContent   = hReal + 'h reais';
   } else {
     document.getElementById('h-h-bruto-real').textContent     = '—';
@@ -884,9 +905,6 @@ function recalc(d) {
     document.getElementById('h-h-liq-real-sub').textContent   = 'horas reais';
   }
 
-  const consumo = parseFloat(d.consumo)          || 0;
-  const preco   = parseFloat(d.precoCombustivel) || 0;
-  const custoKm = consumo > 0 ? preco / consumo : 0;
   document.getElementById('h-custkm').textContent = custoKm > 0 ? fR(custoKm) : '—';
   document.getElementById('h-km').textContent     = km > 0 ? fmt(km,0) + ' km' : '0 km';
 
