@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  <title>MotorLucro — Controle de Corridas</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #252836;
+      --accent: #6c63ff;
+      --green: #43e97b;
+      --red: #f5576c;
+      --orange: #f7971e;
+      --blue: #4fc3f7;
+      --text: #e8eaf6;
+      --text2: #9397a7;
+      --border: #2d3047;
+      --r: 12px;
+      --rs: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    header {
+      background: var(--surface);
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 { font-size: 20px; font-weight: 800; color: var(--accent); }
+    header p  { font-size: 11px; color: var(--text2); margin-top: 1px; }
+
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 61px;
+      z-index: 9;
+    }
+    .tab {
+      flex: 1;
+      padding: 11px 4px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text2);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .content { padding: 14px; padding-bottom: 50px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Day navigation ── */
+    .day-nav {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+    .nav-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--rs);
+      color: var(--text);
+      font-size: 20px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.15s;
+      line-height: 1;
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--accent); }
+    .nav-btn:disabled { opacity: 0.25; cursor: default; pointer-events: none; }
+    .day-nav-mid {
+      flex: 1;
+      text-align: center;
+    }
+    .day-label { font-size: 15px; font-weight: 700; }
+    .goto-today-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 3px;
+    }
+
+    /* ── Highlight box ── */
+    .highlight {
+      background: linear-gradient(135deg, rgba(108,99,255,.15), rgba(67,233,123,.12));
+      border: 1px solid rgba(108,99,255,.3);
+      border-radius: var(--r);
+      padding: 20px 18px 16px;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .hl-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+    .hl-value {
+      font-size: 38px;
+      font-weight: 900;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--accent), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hl-value.neg {
+      background: linear-gradient(135deg, var(--red), #ff8a00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hl-sub { font-size: 12px; color: var(--text2); margin-top: 8px; }
+
+    /* ── Stats grid ── */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .stat-card { background: var(--surface2); border-radius: var(--rs); padding: 12px; }
+    .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: .4px; color: var(--text2); margin-bottom: 5px; font-weight: 600; }
+    .stat-value { font-size: 18px; font-weight: 800; }
+    .stat-sub   { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+    .green  { color: var(--green); }
+    .red    { color: var(--red); }
+    .blue   { color: var(--blue); }
+    .orange { color: var(--orange); }
+    .purple { color: var(--accent); }
+
+    /* ── Section blocks ── */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+    }
+    .section-title { font-size: 14px; font-weight: 700; }
+    .section-badge { font-size: 13px; font-weight: 700; }
+    .section-body {
+      padding: 4px 16px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Entry items ── */
+    .entry-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .entry-item:last-child { border-bottom: none; }
+    .entry-val  { font-size: 15px; font-weight: 700; }
+    .entry-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .del-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--red);
+      cursor: pointer;
+      padding: 5px 10px;
+      font-size: 13px;
+      opacity: 0.6;
+      transition: opacity 0.15s;
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
+    .del-btn:hover { opacity: 1; }
+
+    /* ── Inputs ── */
+    .inp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .inp-label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 5px; font-weight: 500; }
+    input[type="number"], input[type="text"] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--rs);
+      padding: 11px 13px;
+      color: var(--text);
+      font-size: 15px;
+      transition: border-color 0.2s;
+    }
+    input:focus { outline: none; border-color: var(--accent); }
+    .inp-hint { font-size: 10px; color: var(--text2); margin-top: 8px; line-height: 1.5; }
+
+    /* ── Add button ── */
+    .add-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 11px;
+      border: 1px dashed rgba(108,99,255,.5);
+      border-radius: var(--rs);
+      background: transparent;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .add-btn:hover { background: rgba(108,99,255,.1); }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 13px;
+      border: none;
+      border-radius: var(--rs);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+    }
+    .btn:hover   { opacity: .88; }
+    .btn:active  { transform: scale(.98); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-cancel  { background: var(--surface2); color: var(--text2); }
+    .btn-danger {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: var(--rs);
+      background: transparent;
+      color: var(--text2);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-danger:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Card (for relatório) ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--text2);
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    /* ── Period tabs ── */
+    .period-tabs {
+      display: flex;
+      background: var(--surface2);
+      border-radius: var(--rs);
+      padding: 3px;
+      margin-bottom: 14px;
+      gap: 3px;
+    }
+    .period-tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px 4px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text2);
+      transition: all .2s;
+      user-select: none;
+    }
+    .period-tab.active { background: var(--surface); color: var(--text); }
+
+    /* ── Chart canvas ── */
+    #chart-canvas { display: block; width: 100%; height: 140px; }
+
+    /* ── Breakdown bar ── */
+    .breakdown-bar {
+      height: 30px;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      margin-bottom: 10px;
+    }
+    .breakdown-legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; }
+    .breakdown-legend span { display: flex; align-items: center; gap: 4px; }
+
+    /* ── Day card (relatório list) ── */
+    .day-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .day-card:last-child { border-bottom: none; }
+    .day-card:hover { background: rgba(108,99,255,.05); margin: 0 -16px; padding: 11px 16px; border-radius: 6px; }
+    .day-card-date { font-size: 11px; color: var(--text2); margin-bottom: 2px; }
+    .day-card-net  { font-size: 16px; font-weight: 800; }
+    .day-card-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .day-card-arrow { color: var(--text2); font-size: 16px; flex-shrink: 0; }
+
+    /* ── Simulator ── */
+    .sched-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .sched-header  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .sched-name    { font-weight: 800; font-size: 17px; }
+    .sched-desc    { font-size: 10px; padding: 3px 9px; background: var(--surface2); border-radius: 20px; color: var(--text2); }
+    .sched-time    { display: flex; align-items: center; background: var(--surface2); border-radius: var(--rs); padding: 10px 6px; margin-bottom: 10px; gap: 4px; }
+    .sched-ti      { text-align: center; flex: 1; }
+    .sched-ti-val  { font-size: 16px; font-weight: 800; }
+    .sched-ti-lbl  { font-size: 10px; color: var(--text2); margin-top: 2px; }
+    .sched-ti-sep  { color: var(--border); font-size: 18px; flex-shrink: 0; }
+    .bar-wrap      { height: 5px; background: var(--surface2); border-radius: 3px; margin: 10px 0; overflow: hidden; }
+    .bar-fill      { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width .5s ease; }
+    .sched-ciclo   { font-size: 11px; color: var(--accent); margin-bottom: 10px; font-weight: 600; letter-spacing: .2px; }
+    .sched-earn    { display: flex; justify-content: space-between; align-items: center; }
+    .earn-lbl      { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 3px; }
+    .earn-val      { font-size: 19px; font-weight: 800; }
+    .custom-box   { background: var(--surface2); border-radius: var(--rs); padding: 14px; margin-top: 4px; }
+    .custom-box input { background: var(--surface); }
+    .row2         { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .divider      { height: 1px; background: var(--border); margin: 14px 0; }
+    .slabel       { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.75);
+      z-index: 50;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      padding: 24px 20px 30px;
+      width: 100%;
+      max-width: 480px;
+      animation: slideUp .25s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+    .modal-title { font-size: 17px; font-weight: 800; margin-bottom: 18px; text-align: center; }
+    .modal-label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+    .quick-amounts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+    .qa-btn {
+      padding: 11px 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--rs);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color .15s, background .15s;
+    }
+    .qa-btn:hover    { border-color: var(--accent); }
+    .qa-btn.selected { border-color: var(--accent); background: rgba(108,99,255,.25); color: var(--accent); }
+    .modal-field     { margin-bottom: 14px; }
+    .modal-btn-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* ── Empty ── */
+    .empty { text-align: center; padding: 48px 20px; color: var(--text2); }
+    .empty .ico { font-size: 44px; margin-bottom: 12px; }
+    .empty p    { font-size: 14px; line-height: 1.6; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 22px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity .25s, transform .25s;
+      z-index: 999;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🚗 MotorLucro</h1>
+  <p>Controle financeiro de corridas por app</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="goTab('hoje')">Hoje</div>
+  <div class="tab" onclick="goTab('relatorio')">Relatório</div>
+  <div class="tab" onclick="goTab('simulador')">Simulador</div>
+</div>
+
+<div class="content">
+
+  <!-- ── HOJE ──────────────────────────────────────────── -->
+  <div class="page active" id="page-hoje">
+
+    <!-- Day navigation -->
+    <div class="day-nav">
+      <button class="nav-btn" onclick="prevDay()">&#8592;</button>
+      <div class="day-nav-mid">
+        <div class="day-label" id="day-label">—</div>
+        <button class="goto-today-btn" id="btn-goto-today" onclick="gotoToday()">↑ Ir para hoje</button>
+      </div>
+      <button class="nav-btn" id="btn-next-day" onclick="nextDay()">&#8594;</button>
+    </div>
+
+    <!-- Highlight -->
+    <div class="highlight">
+      <div class="hl-label">Líquido no bolso</div>
+      <div class="hl-value" id="h-liquido">R$ 0,00</div>
+      <div class="hl-sub" id="h-sub">Adicione um ganho para começar</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Bruto ganho</div>
+        <div class="stat-value green" id="h-bruto">R$ 0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total gastos</div>
+        <div class="stat-value red" id="h-gastos">R$ 0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">R$/h bruto</div>
+        <div class="stat-value blue" id="h-h-bruto">—</div>
+        <div class="stat-sub" id="h-h-bruto-sub">horas no app</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">R$/h líquido</div>
+        <div class="stat-value purple" id="h-h-liq">—</div>
+        <div class="stat-sub" id="h-h-liq-sub">horas no app</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Custo por km</div>
+        <div class="stat-value orange" id="h-custkm">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Km rodados</div>
+        <div class="stat-value" id="h-km">0 km</div>
+      </div>
+    </div>
+
+    <!-- Horas & Km -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-title">⏱ Horas &amp; Km</span>
+        <span class="section-badge" id="badge-horas" style="color:var(--text2)">—</span>
+      </div>
+      <div class="section-body">
+        <div class="inp-row">
+          <div>
+            <label class="inp-label">Horas no app (online)</label>
+            <input type="number" id="inp-happ" placeholder="Ex: 6" step="0.5" min="0" oninput="autoSave()">
+          </div>
+          <div>
+            <label class="inp-label">Horas reais (total)</label>
+            <input type="number" id="inp-hreal" placeholder="Ex: 8" step="0.5" min="0" oninput="autoSave()">
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <label class="inp-label">Km rodados</label>
+          <input type="number" id="inp-km" placeholder="Ex: 120" step="0.1" min="0" oninput="autoSave()">
+        </div>
+        <p class="inp-hint">
+          <b style="color:var(--accent)">No app:</b> tempo ligado recebendo corridas &nbsp;·&nbsp;
+          <b style="color:var(--blue)">Real:</b> saída de casa até voltar
+        </p>
+      </div>
+    </div>
+
+    <!-- Ganhos -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-title">💰 Ganhos</span>
+        <span class="section-badge green" id="badge-ganhos">R$ 0,00</span>
+      </div>
+      <div class="section-body">
+        <div id="list-ganhos"></div>
+        <button class="add-btn" onclick="openModal('ganho')">+ Registrar ganho</button>
+      </div>
+    </div>
+
+    <!-- Combustível -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-title">⛽ Combustível</span>
+        <span class="section-badge red" id="badge-comb">R$ 0,00</span>
+      </div>
+      <div class="section-body">
+        <div id="list-comb"></div>
+        <button class="add-btn" onclick="openModal('comb')">+ Abastecer</button>
+      </div>
+    </div>
+
+    <!-- Outros -->
+    <div class="section">
+      <div class="section-head">
+        <span class="section-title">📋 Outros gastos</span>
+        <span class="section-badge red" id="badge-outros">R$ 0,00</span>
+      </div>
+      <div class="section-body">
+        <div id="list-outros"></div>
+        <button class="add-btn" onclick="openModal('outro')">+ Adicionar gasto</button>
+      </div>
+    </div>
+
+    <button class="btn-danger" onclick="limparDia()">🗑 Limpar dados deste dia</button>
+
+  </div>
+
+  <!-- ── RELATÓRIO ───────────────────────────────────────── -->
+  <div class="page" id="page-relatorio">
+
+    <div class="period-tabs">
+      <div class="period-tab active" onclick="setPeriod(7,this)">7 dias</div>
+      <div class="period-tab" onclick="setPeriod(14,this)">14 dias</div>
+      <div class="period-tab" onclick="setPeriod(30,this)">30 dias</div>
+      <div class="period-tab" onclick="setPeriod(0,this)">Tudo</div>
+    </div>
+
+    <div id="rel-empty" class="empty" style="display:none">
+      <div class="ico">📊</div>
+      <p>Nenhum dado ainda.<br>Adicione ganhos e gastos na aba <strong>Hoje</strong>.</p>
+    </div>
+
+    <div id="rel-content">
+      <!-- KPIs -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total líquido</div>
+          <div class="stat-value green" id="r-total">R$ 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Dias trabalhados</div>
+          <div class="stat-value blue" id="r-dias">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Média por dia</div>
+          <div class="stat-value purple" id="r-media">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Melhor dia</div>
+          <div class="stat-value orange" id="r-melhor">—</div>
+        </div>
+      </div>
+
+      <!-- Bar chart -->
+      <div class="card">
+        <div class="card-title">Líquido por dia (R$)</div>
+        <canvas id="chart-canvas"></canvas>
+      </div>
+
+      <!-- Breakdown -->
+      <div class="card">
+        <div class="card-title">Composição do bruto</div>
+        <div class="breakdown-bar" id="bdown-bar"></div>
+        <div class="breakdown-legend" id="bdown-legend"></div>
+      </div>
+
+      <!-- Day list -->
+      <div class="card">
+        <div class="card-title" id="rel-list-title">Todos os dias</div>
+        <div id="rel-day-list"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── SIMULADOR ──────────────────────────────────────── -->
+  <div class="page" id="page-simulador">
+
+    <div id="sim-empty" class="empty" style="display:none">
+      <div class="ico">🔮</div>
+      <p>Adicione dados em pelo menos um dia<br>para ver as projeções de escala.</p>
+    </div>
+
+    <div id="sim-content" style="display:none">
+      <div class="slabel">Projeção mensal por escala</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">
+        <span id="sim-base" style="color:var(--accent)">Registre dias para ver a projeção.</span>
+      </p>
+      <div id="sim-cards"></div>
+
+      <div class="divider"></div>
+      <div class="slabel">Simulação personalizada</div>
+
+      <div class="custom-box">
+        <div class="row2">
+          <div>
+            <label class="inp-label">Horas de trabalho</label>
+            <input type="number" id="sim-ht" placeholder="Ex: 10" min="1" max="24" oninput="simCustom()">
+          </div>
+          <div>
+            <label class="inp-label">Horas de descanso</label>
+            <input type="number" id="sim-hd" placeholder="Ex: 14" min="0" oninput="simCustom()">
+          </div>
+        </div>
+        <div id="sim-custom-res" style="display:none">
+          <div class="divider"></div>
+          <div class="stats-grid" style="margin-bottom:0">
+            <div class="stat-card">
+              <div class="stat-label">Turnos/mês</div>
+              <div class="stat-value blue" id="sc-turnos">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Horas/mês</div>
+              <div class="stat-value" id="sc-horas">0h</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Bruto estimado</div>
+              <div class="stat-value blue" id="sc-bruto">R$ 0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Líquido estimado</div>
+              <div class="stat-value green" id="sc-liq">R$ 0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ── MODAL ──────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Adicionar</div>
+
+    <div id="modal-quick-wrap" style="display:none">
+      <label class="modal-label">Valor rápido</label>
+      <div class="quick-amounts" id="modal-qa"></div>
+    </div>
+
+    <div id="modal-desc-wrap" style="display:none" class="modal-field">
+      <label class="modal-label">Descrição</label>
+      <input type="text" id="modal-desc" placeholder="Ex: Lavagem, alimentação...">
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">Valor (R$)</label>
+      <input type="number" id="modal-valor" placeholder="0,00" step="0.01" min="0">
+    </div>
+
+    <div class="modal-btn-row">
+      <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmModal()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ────────────────────────────────────────────────────────────
+// Storage: ml_days_v3 = { "YYYY-MM-DD": DayData, ... }
+// ────────────────────────────────────────────────────────────
+const DAYS_KEY  = 'ml_days_v3';
+const HORAS_MES = 720;
+
+function loadDays() {
+  return JSON.parse(localStorage.getItem(DAYS_KEY) || '{}');
+}
+function saveDays(d) {
+  localStorage.setItem(DAYS_KEY, JSON.stringify(d));
+}
+function getDay(date) {
+  const all = loadDays();
+  return all[date] ? JSON.parse(JSON.stringify(all[date])) : emptyDay(date);
+}
+function saveDay(date, data) {
+  const all = loadDays();
+  all[date] = data;
+  saveDays(all);
+}
+function emptyDay(date) {
+  return { date, horasApp:'', horasReal:'', km:'', ganhos:[], comb:[], outros:[] };
+}
+function deleteDay(date) {
+  const all = loadDays();
+  delete all[date];
+  saveDays(all);
+}
+
+// ── Utils ──────────────────────────────────────────────────
+const fmt  = (n, d=2) => n.toLocaleString('pt-BR', { minimumFractionDigits:d, maximumFractionDigits:d });
+const fR   = n => 'R$ ' + fmt(n);
+const nowT = () => {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+};
+const todayStr = () => new Date().toISOString().slice(0,10);
+const addDays  = (dateStr, n) => {
+  const d = new Date(dateStr + 'T12:00:00');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0,10);
+};
+const fmtDate = s => {
+  const [y,m,d] = s.split('-');
+  return `${d}/${m}/${y}`;
+};
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── Tabs ───────────────────────────────────────────────────
+const TABS = ['hoje','relatorio','simulador'];
+function goTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)  => t.classList.toggle('active', TABS[i]===name));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id==='page-'+name));
+  if (name==='relatorio') renderRelatorio();
+  if (name==='simulador') renderSim();
+}
+
+// ── Day navigation ─────────────────────────────────────────
+let curDate = todayStr();
+let curDay  = getDay(curDate);
+
+function navigateTo(date) {
+  curDate = date;
+  curDay  = getDay(date);
+  renderDayPage();
+}
+
+function prevDay()   { navigateTo(addDays(curDate, -1)); }
+function nextDay()   { if (curDate < todayStr()) navigateTo(addDays(curDate, 1)); }
+function gotoToday() { navigateTo(todayStr()); }
+
+function renderDayPage() {
+  const isToday = curDate === todayStr();
+  const d   = new Date(curDate + 'T12:00:00');
+  const DOW = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const prefix = isToday ? 'Hoje' : DOW[d.getDay()];
+  const dateShort = String(d.getDate()).padStart(2,'0') + '/' +
+                    String(d.getMonth()+1).padStart(2,'0');
+
+  document.getElementById('day-label').textContent = prefix + ', ' + dateShort;
+  document.getElementById('btn-next-day').disabled = isToday;
+  document.getElementById('btn-goto-today').style.display = isToday ? 'none' : 'block';
+
+  document.getElementById('inp-happ').value  = curDay.horasApp  || '';
+  document.getElementById('inp-hreal').value = curDay.horasReal || '';
+  document.getElementById('inp-km').value    = curDay.km        || '';
+
+  recalc(curDay);
+}
+
+// ── Auto-save (oninput) ────────────────────────────────────
+function autoSave() {
+  curDay.horasApp  = document.getElementById('inp-happ').value;
+  curDay.horasReal = document.getElementById('inp-hreal').value;
+  curDay.km        = document.getElementById('inp-km').value;
+  saveDay(curDate, curDay);
+  recalc(curDay);
+}
+
+// ── Recalc ─────────────────────────────────────────────────
+function recalc(d) {
+  const tG   = d.ganhos.reduce((s,e)=>s+e.valor, 0);
+  const tC   = d.comb.reduce((s,e)=>s+e.valor,   0);
+  const tO   = d.outros.reduce((s,e)=>s+e.valor,  0);
+  const tGas = tC + tO;
+  const liq  = tG - tGas;
+  const hApp  = parseFloat(d.horasApp)  || 0;
+  const hReal = parseFloat(d.horasReal) || 0;
+  const km    = parseFloat(d.km)        || 0;
+
+  // Highlight
+  const liqEl = document.getElementById('h-liquido');
+  liqEl.textContent = fR(liq);
+  liqEl.className   = 'hl-value' + (liq < 0 ? ' neg' : '');
+
+  const sub = [];
+  if (tG   > 0) sub.push('Bruto ' + fR(tG));
+  if (tGas > 0) sub.push('Gastos ' + fR(tGas));
+  document.getElementById('h-sub').textContent = sub.length ? sub.join(' · ') : 'Adicione um ganho para começar';
+
+  // Stats
+  document.getElementById('h-bruto').textContent  = fR(tG);
+  document.getElementById('h-gastos').textContent = fR(tGas);
+
+  if (hApp > 0) {
+    document.getElementById('h-h-bruto').textContent     = fR(tG  / hApp);
+    document.getElementById('h-h-bruto-sub').textContent = hApp + 'h no app';
+    document.getElementById('h-h-liq').textContent       = fR(liq / hApp);
+    document.getElementById('h-h-liq-sub').textContent   = hApp + 'h no app';
+  } else {
+    document.getElementById('h-h-bruto').textContent     = '—';
+    document.getElementById('h-h-bruto-sub').textContent = 'horas no app';
+    document.getElementById('h-h-liq').textContent       = '—';
+    document.getElementById('h-h-liq-sub').textContent   = 'horas no app';
+  }
+
+  document.getElementById('h-custkm').textContent = km > 0 ? fR(tGas / km) : '—';
+  document.getElementById('h-km').textContent     = km > 0 ? fmt(km,0) + ' km' : '0 km';
+
+  // Badges
+  const hParts = [];
+  if (hApp  > 0) hParts.push(hApp  + 'h app');
+  if (hReal > 0) hParts.push(hReal + 'h real');
+  if (km    > 0) hParts.push(fmt(km,0) + ' km');
+  document.getElementById('badge-horas').textContent = hParts.length ? hParts.join(' · ') : '—';
+  document.getElementById('badge-horas').style.color = hParts.length ? 'var(--blue)' : 'var(--text2)';
+
+  document.getElementById('badge-ganhos').textContent = fR(tG);
+  document.getElementById('badge-comb').textContent   = fR(tC);
+  document.getElementById('badge-outros').textContent = fR(tO);
+
+  renderList('ganhos', d.ganhos, 'green');
+  renderList('comb',   d.comb,   'red');
+  renderList('outros', d.outros, 'orange');
+}
+
+function renderList(type, list, color) {
+  const el = document.getElementById('list-' + type);
+  if (!list.length) { el.innerHTML = ''; return; }
+  el.innerHTML = list.map(e => `
+    <div class="entry-item">
+      <div>
+        <div class="entry-val ${color}">${fR(e.valor)}</div>
+        <div class="entry-meta">${e.hora || ''}${e.desc ? ' · ' + e.desc : ''}</div>
+      </div>
+      <button class="del-btn" onclick="deleteEntry('${type}', ${e.id})">✕</button>
+    </div>`).join('');
+}
+
+function deleteEntry(type, id) {
+  curDay[type] = curDay[type].filter(e => e.id !== id);
+  saveDay(curDate, curDay);
+  recalc(curDay);
+  toast('Entrada removida');
+}
+
+function limparDia() {
+  if (!confirm('Apagar todos os dados de ' + fmtDate(curDate) + '?')) return;
+  deleteDay(curDate);
+  curDay = emptyDay(curDate);
+  renderDayPage();
+  toast('Dia limpo');
+}
+
+// ── Modal ──────────────────────────────────────────────────
+let mType = null;
+
+const QUICK = {
+  ganho: [50, 80, 100, 120, 150, 200, 250, 300],
+  comb:  [50, 80, 100, 140, 160, 200, 250, 300]
+};
+
+function openModal(type) {
+  mType = type;
+  document.getElementById('modal-valor').value = '';
+  document.getElementById('modal-desc').value  = '';
+  document.querySelectorAll('.qa-btn').forEach(b => b.classList.remove('selected'));
+
+  const titles = { ganho:'💰 Registrar Ganho', comb:'⛽ Abastecer', outro:'📋 Adicionar Gasto' };
+  document.getElementById('modal-title').textContent = titles[type];
+
+  const hasQuick = type !== 'outro';
+  document.getElementById('modal-quick-wrap').style.display = hasQuick ? 'block' : 'none';
+  document.getElementById('modal-desc-wrap').style.display  = type === 'outro' ? 'block' : 'none';
+
+  if (hasQuick) {
+    document.getElementById('modal-qa').innerHTML = QUICK[type].map(v =>
+      `<div class="qa-btn" onclick="selectQA(${v})">R$${v}</div>`
+    ).join('');
+  }
+
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('modal-valor').focus(), 300);
+}
+
+function selectQA(v) {
+  document.getElementById('modal-valor').value = v;
+  document.querySelectorAll('.qa-btn').forEach(b =>
+    b.classList.toggle('selected', parseInt(b.textContent.replace('R$','')) === v)
+  );
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  mType = null;
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+function confirmModal() {
+  const valor = parseFloat(document.getElementById('modal-valor').value);
+  if (!valor || valor <= 0) { toast('⚠️ Informe um valor válido'); return; }
+
+  const entry = { id: Date.now(), valor, hora: nowT() };
+  if (mType === 'outro') {
+    const desc = document.getElementById('modal-desc').value.trim();
+    entry.desc = desc || 'Gasto';
+  }
+
+  const key = mType === 'ganho' ? 'ganhos' : mType === 'comb' ? 'comb' : 'outros';
+  curDay[key].push(entry);
+  saveDay(curDate, curDay);
+  recalc(curDay);
+
+  const labels = { ganho:'✅ Ganho registrado', comb:'✅ Abastecimento salvo', outro:'✅ Gasto adicionado' };
+  closeModal();
+  toast(labels[mType]);
+}
+
+// ── Relatório ──────────────────────────────────────────────
+let relPeriod = 7;
+
+function setPeriod(n, el) {
+  relPeriod = n;
+  document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderRelatorio();
+}
+
+function computedDays(period) {
+  const all = loadDays();
+  let days = Object.values(all).sort((a,b) => a.date.localeCompare(b.date));
+
+  if (period > 0) {
+    const cutoff = addDays(todayStr(), -period);
+    days = days.filter(d => d.date >= cutoff);
+  }
+
+  return days.map(d => {
+    const tG = d.ganhos.reduce((s,e)=>s+e.valor,0);
+    const tC = d.comb.reduce((s,e)=>s+e.valor,0);
+    const tO = d.outros.reduce((s,e)=>s+e.valor,0);
+    const tGas = tC + tO;
+    return { ...d, tG, tC, tO, tGas, liq: tG - tGas,
+             hApp:  parseFloat(d.horasApp)  || 0,
+             hReal: parseFloat(d.horasReal) || 0,
+             km:    parseFloat(d.km)        || 0 };
+  }).filter(d => d.tG > 0 || d.tC > 0 || d.tO > 0 || d.km > 0);
+}
+
+function renderRelatorio() {
+  const days  = computedDays(relPeriod);
+  const empty = document.getElementById('rel-empty');
+  const cont  = document.getElementById('rel-content');
+
+  const allExist = Object.keys(loadDays()).length > 0;
+  if (!allExist) { empty.style.display='block'; cont.style.display='none'; return; }
+  empty.style.display='none'; cont.style.display='block';
+
+  const tLiq  = days.reduce((s,d)=>s+d.liq, 0);
+  const tBrut = days.reduce((s,d)=>s+d.tG,  0);
+  const tComb = days.reduce((s,d)=>s+d.tC,  0);
+  const tOutr = days.reduce((s,d)=>s+d.tO,  0);
+  const tGas  = tComb + tOutr;
+  const diasComGanho = days.filter(d=>d.tG>0).length;
+  const media = diasComGanho > 0 ? tLiq / diasComGanho : 0;
+  const melhor = days.reduce((b,d)=>d.liq>b ? d.liq : b, -Infinity);
+
+  document.getElementById('r-total').textContent  = fR(tLiq);
+  document.getElementById('r-total').className    = 'stat-value ' + (tLiq >= 0 ? 'green' : 'red');
+  document.getElementById('r-dias').textContent   = diasComGanho + ' dia' + (diasComGanho!==1?'s':'');
+  document.getElementById('r-media').textContent  = diasComGanho > 0 ? fR(media) : '—';
+  document.getElementById('r-melhor').textContent = melhor > -Infinity ? fR(melhor) : '—';
+
+  drawBarChart(days);
+  drawBreakdown(tBrut, tComb, tOutr, tGas);
+  renderDayList(days);
+}
+
+// Canvas bar chart
+function drawBarChart(days) {
+  const canvas = document.getElementById('chart-canvas');
+  const cssW   = canvas.parentElement.clientWidth - 32;
+  const cssH   = 140;
+  const dpr    = window.devicePixelRatio || 1;
+  canvas.width  = cssW * dpr;
+  canvas.height = cssH * dpr;
+  canvas.style.width  = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const W = cssW, H = cssH;
+  ctx.clearRect(0, 0, W, H);
+
+  if (!days.length) {
+    ctx.fillStyle = '#9397a7';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Sem dados no período', W/2, H/2);
+    return;
+  }
+
+  const values   = days.map(d => d.liq);
+  const maxAbs   = Math.max(...values.map(Math.abs), 1);
+  const baseline = H * 0.68;
+  const barArea  = H * 0.60;
+  const padX     = 4;
+  const totalW   = W - padX * 2;
+  const bW       = Math.max(totalW / days.length - 3, 4);
+  const gap      = (totalW - bW * days.length) / Math.max(days.length - 1, 1);
+
+  // Baseline
+  ctx.strokeStyle = '#2d3047';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, baseline);
+  ctx.lineTo(W, baseline);
+  ctx.stroke();
+
+  days.forEach((d, i) => {
+    const x = padX + i * (bW + gap);
+    const h = (Math.abs(d.liq) / maxAbs) * barArea;
+    const isPos = d.liq >= 0;
+
+    // Gradient
+    const grad = ctx.createLinearGradient(0, isPos ? baseline-h : baseline, 0, isPos ? baseline : baseline+h);
+    if (isPos) {
+      grad.addColorStop(0, '#43e97b');
+      grad.addColorStop(1, 'rgba(67,233,123,.5)');
+    } else {
+      grad.addColorStop(0, 'rgba(245,87,108,.5)');
+      grad.addColorStop(1, '#f5576c');
+    }
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    const r = Math.min(3, bW/2);
+    if (isPos) {
+      ctx.roundRect ? ctx.roundRect(x, baseline-h, bW, h, [r,r,0,0])
+                    : ctx.rect(x, baseline-h, bW, h);
+    } else {
+      ctx.roundRect ? ctx.roundRect(x, baseline, bW, h, [0,0,r,r])
+                    : ctx.rect(x, baseline, bW, h);
+    }
+    ctx.fill();
+
+    // Date label (show for every Nth bar to avoid overlap)
+    const step = Math.ceil(days.length / 14);
+    if (i % step === 0 || i === days.length - 1) {
+      ctx.fillStyle = '#9397a7';
+      ctx.font = `${Math.max(8, Math.min(10, bW * 1.5))}px sans-serif`;
+      ctx.textAlign = 'center';
+      const parts = d.date.split('-');
+      ctx.fillText(parts[2] + '/' + parts[1], x + bW/2, H - 2);
+    }
+  });
+}
+
+// Breakdown bar
+function drawBreakdown(tBrut, tComb, tOutr, tGas) {
+  const liq = tBrut - tGas;
+  const bar  = document.getElementById('bdown-bar');
+  const leg  = document.getElementById('bdown-legend');
+
+  if (tBrut === 0) {
+    bar.innerHTML = `<div style="flex:1;background:var(--border)"></div>`;
+    leg.innerHTML = '<span style="color:var(--text2)">Sem dados</span>';
+    return;
+  }
+
+  const pC = tBrut > 0 ? (tComb/tBrut)*100 : 0;
+  const pO = tBrut > 0 ? (tOutr/tBrut)*100 : 0;
+  const pL = Math.max(0, 100 - pC - pO);
+
+  bar.innerHTML = `
+    <div style="width:${pC.toFixed(1)}%;background:var(--orange);opacity:.9"></div>
+    <div style="width:${pO.toFixed(1)}%;background:var(--red);opacity:.9"></div>
+    <div style="flex:1;background:var(--green);opacity:.9"></div>`;
+
+  leg.innerHTML = `
+    <span><span style="color:var(--orange)">■</span> Combustível ${fmt(pC,0)}% &nbsp;${fR(tComb)}</span>
+    <span><span style="color:var(--red)">■</span> Outros ${fmt(pO,0)}% &nbsp;${fR(tOutr)}</span>
+    <span><span style="color:var(--green)">■</span> Líquido ${fmt(pL,0)}% &nbsp;${fR(Math.max(liq,0))}</span>`;
+}
+
+// Day list in relatório
+function renderDayList(days) {
+  const el = document.getElementById('rel-day-list');
+  const sorted = [...days].reverse();
+  if (!sorted.length) { el.innerHTML = '<p style="color:var(--text2);font-size:13px">Nenhum dia com dados no período.</p>'; return; }
+
+  document.getElementById('rel-list-title').textContent = 'Dias (' + sorted.length + ')';
+
+  el.innerHTML = sorted.map(d => {
+    const cor  = d.liq >= 0 ? 'green' : 'red';
+    const meta = [];
+    if (d.tG   > 0) meta.push('Bruto ' + fR(d.tG));
+    if (d.tGas > 0) meta.push('Gastos ' + fR(d.tGas));
+    if (d.hApp  > 0) meta.push(fmt(d.hApp,1) + 'h app');
+    if (d.km    > 0) meta.push(fmt(d.km,0) + ' km');
+    const dt = new Date(d.date + 'T12:00:00');
+    const DOW = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    return `
+      <div class="day-card" onclick="openDay('${d.date}')">
+        <div>
+          <div class="day-card-date">${DOW[dt.getDay()]}, ${fmtDate(d.date)}</div>
+          <div class="day-card-net ${cor}">${fR(d.liq)}</div>
+          <div class="day-card-meta">${meta.join(' · ')}</div>
+        </div>
+        <div class="day-card-arrow">›</div>
+      </div>`;
+  }).join('');
+}
+
+function openDay(date) {
+  navigateTo(date);
+  goTab('hoje');
+}
+
+// ── Simulador ──────────────────────────────────────────────
+// Escalas pré-calculadas para 720h/mês
+// 12·24/12·48: ciclo = 12+24+12+48 = 96h → 7,5 ciclos → 15 turnos de 12h → 180h trabalho
+// 24×72:       ciclo = 24+72 = 96h        → 7,5 ciclos → 7-8 turnos de 24h → 180h trabalho
+// 24×48:       ciclo = 24+48 = 72h        → 720/72 = 10 turnos de 24h → 240h trabalho
+const ESCALAS = [
+  {
+    nome:   '12·24/12·48',
+    ciclo:  '12h dia → 24h folga → 12h noite → 48h folga',
+    turnos: 15, hTrab: 180, hFolga: 540,
+  },
+  {
+    nome:   '12×36',
+    ciclo:  '12h trabalhando → 36h de folga',
+    turnos: 15, hTrab: 180, hFolga: 540,
+  },
+  {
+    nome:   '24×48',
+    ciclo:  '24h trabalhando → 48h de folga',
+    turnos: 10, hTrab: 240, hFolga: 480,
+  },
+  {
+    nome:   '24×72',
+    ciclo:  '24h trabalhando → 72h de folga',
+    turnos: 8, hTrab: 180, hFolga: 540,
+  },
+  {
+    nome:   '8h×5d',
+    ciclo:  '8h/dia · folga sábado e domingo',
+    turnos: 22, hTrab: 176, hFolga: 544,
+  },
+  {
+    nome:   '6h×6d',
+    ciclo:  '6h/dia · 1 dia de folga por semana',
+    turnos: 26, hTrab: 156, hFolga: 564,
+  },
+];
+
+function simDays() {
+  return Object.values(loadDays()).map(d => {
+    const tG = d.ganhos.reduce((s,e)=>s+e.valor,0);
+    const tC = d.comb.reduce((s,e)=>s+e.valor,0);
+    const tO = d.outros.reduce((s,e)=>s+e.valor,0);
+    return {
+      tG, tGas: tC+tO, liq: tG-tC-tO,
+      hApp:  parseFloat(d.horasApp)  || 0,
+      hReal: parseFloat(d.horasReal) || 0,
+    };
+  }).filter(d => d.tG > 0);
+}
+
+function renderSim() {
+  const days  = simDays();
+  const empty = document.getElementById('sim-empty');
+  const cont  = document.getElementById('sim-content');
+
+  if (!days.length) { empty.style.display='block'; cont.style.display='none'; return; }
+  empty.style.display='none'; cont.style.display='block';
+
+  const totalHApp = days.reduce((s,d)=>s+d.hApp, 0);
+  const totalLiq  = days.reduce((s,d)=>s+d.liq,  0);
+  const totalBrut = days.reduce((s,d)=>s+d.tG,   0);
+  const n         = days.length;
+
+  // R$ por hora no app (soma ganhos ÷ soma horas no app)
+  const liqPH  = totalHApp > 0 ? totalLiq  / totalHApp : 0;
+  const brutPH = totalHApp > 0 ? totalBrut / totalHApp : 0;
+
+  // Se não tiver horas no app registradas, usa média diária como fallback
+  const avgLiq  = totalLiq  / n;
+  const avgBrut = totalBrut / n;
+
+  const useHourly = totalHApp > 0;
+
+  const maxLiq = Math.max(...ESCALAS.map(e =>
+    useHourly ? e.hTrab * liqPH : e.turnos * avgLiq
+  ), 1);
+
+  // Exibe base de cálculo acima das cards
+  const baseEl = document.getElementById('sim-base');
+  if (baseEl) baseEl.textContent = useHourly
+    ? `Taxa: ${fR(liqPH)}/h líquido · ${fR(brutPH)}/h bruto no app · ${totalHApp.toFixed(1)}h registradas (${n} dia${n!==1?'s':''})`
+    : `Média: ${fR(avgLiq)}/dia líquido · ${fR(avgBrut)}/dia bruto (${n} dia${n!==1?'s':''}; registre horas no app para cálculo por hora)`;
+
+  document.getElementById('sim-cards').innerHTML = ESCALAS.map(e => {
+    // horas da escala × R$/h no app = projeção correta
+    const liqMes   = useHourly ? e.hTrab * liqPH  : e.turnos * avgLiq;
+    const brutoMes = useHourly ? e.hTrab * brutPH : e.turnos * avgBrut;
+    const pct      = Math.max(0, (liqMes / maxLiq) * 100);
+    return `
+      <div class="sched-card">
+        <div class="sched-header">
+          <span class="sched-name">${e.nome}</span>
+          <span class="sched-desc">${e.turnos} turnos/mês</span>
+        </div>
+        <div class="sched-ciclo">${e.ciclo}</div>
+        <div class="sched-time">
+          <div class="sched-ti">
+            <div class="sched-ti-val blue">${e.hTrab}h</div>
+            <div class="sched-ti-lbl">trabalhando/mês</div>
+          </div>
+          <div class="sched-ti-sep">|</div>
+          <div class="sched-ti">
+            <div class="sched-ti-val" style="color:var(--text2)">${e.hFolga}h</div>
+            <div class="sched-ti-lbl">de folga/mês</div>
+          </div>
+        </div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
+        <div class="sched-earn">
+          <div>
+            <div class="earn-lbl">Líquido/mês</div>
+            <div class="earn-val green">${fR(liqMes)}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="earn-lbl">Bruto/mês</div>
+            <div class="earn-val blue">${fR(brutoMes)}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function simCustom() {
+  const ht  = parseFloat(document.getElementById('sim-ht').value) || 0;
+  const hd  = parseFloat(document.getElementById('sim-hd').value) || 0;
+  const res = document.getElementById('sim-custom-res');
+  if (ht <= 0) { res.style.display='none'; return; }
+
+  const days = simDays();
+  if (!days.length) return;
+
+  const totalHApp = days.reduce((s,d)=>s+d.hApp, 0);
+  const totalLiq  = days.reduce((s,d)=>s+d.liq,  0);
+  const totalBrut = days.reduce((s,d)=>s+d.tG,   0);
+  const n         = days.length;
+
+  const liqPH  = totalHApp > 0 ? totalLiq  / totalHApp : 0;
+  const brutPH = totalHApp > 0 ? totalBrut / totalHApp : 0;
+  const useH   = totalHApp > 0;
+
+  const ciclo  = ht + hd;
+  const turnos = ciclo > 0 ? Math.floor(HORAS_MES/ciclo) : 0;
+  const hTrab  = turnos * ht;
+  const hFolga = turnos * hd;
+
+  document.getElementById('sc-turnos').textContent = turnos;
+  document.getElementById('sc-horas').textContent  = fmt(hTrab,0) + 'h trab · ' + fmt(hFolga,0) + 'h folga';
+  document.getElementById('sc-bruto').textContent  = fR(useH ? hTrab * brutPH : (totalBrut/n) * turnos);
+  document.getElementById('sc-liq').textContent    = fR(useH ? hTrab * liqPH  : (totalLiq/n)  * turnos);
+  res.style.display = 'block';
+}
+
+// ── Init ───────────────────────────────────────────────────
+navigateTo(todayStr());
+</script>
+</body>
+</html>
