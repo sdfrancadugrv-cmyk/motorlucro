@@ -437,6 +437,7 @@
   <div class="tab active" onclick="goTab('hoje')">Hoje</div>
   <div class="tab" onclick="goTab('relatorio')">Relatório</div>
   <div class="tab" onclick="goTab('simulador')">Simulador</div>
+  <div class="tab" onclick="goTab('veiculo')">⚙️ Veículo</div>
 </div>
 
 <div class="content">
@@ -480,6 +481,16 @@
         <div class="stat-label">R$/h líquido</div>
         <div class="stat-value purple" id="h-h-liq">—</div>
         <div class="stat-sub" id="h-h-liq-sub">horas no app</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">R$/h bruto real</div>
+        <div class="stat-value blue" id="h-h-bruto-real">—</div>
+        <div class="stat-sub" id="h-h-bruto-real-sub">horas reais</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">R$/h líquido real</div>
+        <div class="stat-value purple" id="h-h-liq-real">—</div>
+        <div class="stat-sub" id="h-h-liq-real-sub">horas reais</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Custo por km</div>
@@ -672,6 +683,35 @@
 
   </div>
 
+  <!-- ── VEÍCULO ──────────────────────────────────────────── -->
+  <div class="page" id="page-veiculo">
+    <div class="section">
+      <div class="section-head">
+        <span class="section-title">⛽ Configuração do Veículo</span>
+      </div>
+      <div class="section-body">
+        <div class="inp-row">
+          <div>
+            <label class="inp-label">Média do veículo (km/L)</label>
+            <input type="number" id="cfg-media" placeholder="Ex: 12" step="0.1" min="0">
+          </div>
+          <div>
+            <label class="inp-label">Preço da gasolina (R$/L)</label>
+            <input type="number" id="cfg-preco" placeholder="Ex: 6,50" step="0.01" min="0">
+          </div>
+        </div>
+        <button class="add-btn" style="width:100%;margin-top:12px" onclick="saveConfig()">Salvar configuração</button>
+        <div id="cfg-result" style="margin-top:16px;display:none">
+          <div class="stat-card" style="text-align:center">
+            <div class="stat-label">Custo por km calculado</div>
+            <div class="stat-value orange" id="cfg-custkm-val">—</div>
+            <div class="stat-sub">preço ÷ média (R$/km)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ── MODAL ──────────────────────────────────────────────── -->
@@ -707,11 +747,33 @@
 // ────────────────────────────────────────────────────────────
 // Storage: ml_days_v3 = { "YYYY-MM-DD": DayData, ... }
 // ────────────────────────────────────────────────────────────
-const DAYS_KEY  = 'ml_days_v3';
-const HORAS_MES = 720;
+const DAYS_KEY   = 'ml_days_v3';
+const CONFIG_KEY = 'ml_config_v1';
+const HORAS_MES  = 720;
 
 function loadDays() {
   return JSON.parse(localStorage.getItem(DAYS_KEY) || '{}');
+}
+function loadConfig() {
+  return JSON.parse(localStorage.getItem(CONFIG_KEY) || '{"mediaKm":0,"precoGasolina":0}');
+}
+function saveConfig() {
+  const media = parseFloat(document.getElementById('cfg-media').value) || 0;
+  const preco = parseFloat(document.getElementById('cfg-preco').value) || 0;
+  localStorage.setItem(CONFIG_KEY, JSON.stringify({ mediaKm: media, precoGasolina: preco }));
+  const custo = media > 0 ? preco / media : 0;
+  document.getElementById('cfg-custkm-val').textContent = custo > 0 ? fR(custo) : '—';
+  document.getElementById('cfg-result').style.display   = custo > 0 ? 'block' : 'none';
+  toast('Configuração salva!');
+  recalc(curDay);
+}
+function loadConfigInputs() {
+  const cfg = loadConfig();
+  if (cfg.mediaKm > 0)       document.getElementById('cfg-media').value = cfg.mediaKm;
+  if (cfg.precoGasolina > 0) document.getElementById('cfg-preco').value  = cfg.precoGasolina;
+  const custo = cfg.mediaKm > 0 ? cfg.precoGasolina / cfg.mediaKm : 0;
+  document.getElementById('cfg-custkm-val').textContent = custo > 0 ? fR(custo) : '—';
+  document.getElementById('cfg-result').style.display   = custo > 0 ? 'block' : 'none';
 }
 function saveDays(d) {
   localStorage.setItem(DAYS_KEY, JSON.stringify(d));
@@ -760,7 +822,7 @@ function toast(msg) {
 }
 
 // ── Tabs ───────────────────────────────────────────────────
-const TABS = ['hoje','relatorio','simulador'];
+const TABS = ['hoje','relatorio','simulador','veiculo'];
 function goTab(name) {
   document.querySelectorAll('.tab').forEach((t,i)  => t.classList.toggle('active', TABS[i]===name));
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id==='page-'+name));
@@ -847,7 +909,21 @@ function recalc(d) {
     document.getElementById('h-h-liq-sub').textContent   = 'horas no app';
   }
 
-  document.getElementById('h-custkm').textContent = km > 0 ? fR(tGas / km) : '—';
+  if (hReal > 0) {
+    document.getElementById('h-h-bruto-real').textContent     = fR(tG  / hReal);
+    document.getElementById('h-h-bruto-real-sub').textContent = hReal + 'h reais';
+    document.getElementById('h-h-liq-real').textContent       = fR(liq / hReal);
+    document.getElementById('h-h-liq-real-sub').textContent   = hReal + 'h reais';
+  } else {
+    document.getElementById('h-h-bruto-real').textContent     = '—';
+    document.getElementById('h-h-bruto-real-sub').textContent = 'horas reais';
+    document.getElementById('h-h-liq-real').textContent       = '—';
+    document.getElementById('h-h-liq-real-sub').textContent   = 'horas reais';
+  }
+
+  const cfg     = loadConfig();
+  const custoKm = cfg.mediaKm > 0 ? cfg.precoGasolina / cfg.mediaKm : 0;
+  document.getElementById('h-custkm').textContent = custoKm > 0 ? fR(custoKm) : '—';
   document.getElementById('h-km').textContent     = km > 0 ? fmt(km,0) + ' km' : '0 km';
 
   // Badges
@@ -1318,6 +1394,7 @@ function simCustom() {
 
 // ── Init ───────────────────────────────────────────────────
 navigateTo(todayStr());
+loadConfigInputs();
 </script>
 </body>
 </html>
