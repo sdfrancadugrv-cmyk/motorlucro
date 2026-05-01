@@ -658,6 +658,26 @@
       <div id="sim-cards"></div>
 
       <div class="divider"></div>
+      <div class="slabel">Adicionar escala</div>
+      <div class="custom-box">
+        <div style="margin-bottom:10px">
+          <label class="inp-label">Nome da escala</label>
+          <input type="text" id="new-escala-nome" placeholder="Ex: 10×14">
+        </div>
+        <div class="row2">
+          <div>
+            <label class="inp-label">Horas trabalhando</label>
+            <input type="number" id="new-escala-ht" placeholder="Ex: 10" min="1" max="24">
+          </div>
+          <div>
+            <label class="inp-label">Horas de folga</label>
+            <input type="number" id="new-escala-hd" placeholder="Ex: 14" min="0">
+          </div>
+        </div>
+        <button class="add-btn" style="width:100%;margin-top:12px" onclick="addEscala()">+ Adicionar escala</button>
+      </div>
+
+      <div class="divider"></div>
       <div class="slabel">Simulação personalizada</div>
 
       <div class="custom-box">
@@ -1228,42 +1248,47 @@ function openDay(date) {
 }
 
 // ── Simulador ──────────────────────────────────────────────
-// Escalas pré-calculadas para 720h/mês
-// 12·24/12·48: ciclo = 12+24+12+48 = 96h → 7,5 ciclos → 15 turnos de 12h → 180h trabalho
-// 24×72:       ciclo = 24+72 = 96h        → 7,5 ciclos → 7-8 turnos de 24h → 180h trabalho
-// 24×48:       ciclo = 24+48 = 72h        → 720/72 = 10 turnos de 24h → 240h trabalho
-const ESCALAS = [
-  {
-    nome:   '12·24/12·48',
-    ciclo:  '12h dia → 24h folga → 12h noite → 48h folga',
-    turnos: 15, hTrab: 180, hFolga: 540,
-  },
-  {
-    nome:   '12×36',
-    ciclo:  '12h trabalhando → 36h de folga',
-    turnos: 15, hTrab: 180, hFolga: 540,
-  },
-  {
-    nome:   '24×48',
-    ciclo:  '24h trabalhando → 48h de folga',
-    turnos: 10, hTrab: 240, hFolga: 480,
-  },
-  {
-    nome:   '24×72',
-    ciclo:  '24h trabalhando → 72h de folga',
-    turnos: 8, hTrab: 180, hFolga: 540,
-  },
-  {
-    nome:   '8h×5d',
-    ciclo:  '8h/dia · folga sábado e domingo',
-    turnos: 22, hTrab: 176, hFolga: 544,
-  },
-  {
-    nome:   '6h×6d',
-    ciclo:  '6h/dia · 1 dia de folga por semana',
-    turnos: 26, hTrab: 156, hFolga: 564,
-  },
+const ESCALAS_KEY     = 'ml_escalas_v1';
+const ESCALAS_DEFAULT = [
+  { nome:'12·24/12·48', ciclo:'12h dia → 24h folga → 12h noite → 48h folga', turnos:15, hTrab:180, hFolga:540 },
+  { nome:'12×36',       ciclo:'12h trabalhando → 36h de folga',               turnos:15, hTrab:180, hFolga:540 },
+  { nome:'24×48',       ciclo:'24h trabalhando → 48h de folga',               turnos:10, hTrab:240, hFolga:480 },
+  { nome:'24×72',       ciclo:'24h trabalhando → 72h de folga',               turnos:8,  hTrab:180, hFolga:540 },
+  { nome:'8h×5d',       ciclo:'8h/dia · folga sábado e domingo',              turnos:22, hTrab:176, hFolga:544 },
+  { nome:'6h×6d',       ciclo:'6h/dia · 1 dia de folga por semana',           turnos:26, hTrab:156, hFolga:564 },
 ];
+
+function loadEscalas() {
+  const s = localStorage.getItem(ESCALAS_KEY);
+  if (s) return JSON.parse(s);
+  saveEscalas(ESCALAS_DEFAULT);
+  return JSON.parse(JSON.stringify(ESCALAS_DEFAULT));
+}
+function saveEscalas(list) {
+  localStorage.setItem(ESCALAS_KEY, JSON.stringify(list));
+}
+function addEscala() {
+  const nome = document.getElementById('new-escala-nome').value.trim();
+  const ht   = parseFloat(document.getElementById('new-escala-ht').value) || 0;
+  const hd   = parseFloat(document.getElementById('new-escala-hd').value) || 0;
+  if (!nome || ht <= 0) { toast('Informe o nome e as horas de trabalho'); return; }
+  const cicloH = ht + hd;
+  const turnos = cicloH > 0 ? Math.floor(HORAS_MES / cicloH) : 0;
+  const list   = loadEscalas();
+  list.push({ nome, ciclo: ht + 'h trabalhando → ' + hd + 'h de folga', turnos, hTrab: turnos * ht, hFolga: turnos * hd });
+  saveEscalas(list);
+  document.getElementById('new-escala-nome').value = '';
+  document.getElementById('new-escala-ht').value   = '';
+  document.getElementById('new-escala-hd').value   = '';
+  toast('Escala adicionada!');
+  renderSim();
+}
+function deleteEscala(idx) {
+  const list = loadEscalas();
+  list.splice(idx, 1);
+  saveEscalas(list);
+  renderSim();
+}
 
 function simDays() {
   return Object.values(loadDays()).map(d => {
@@ -1303,7 +1328,9 @@ function renderSim() {
 
   const useHourly = totalHApp > 0;
 
-  const maxLiq = Math.max(...ESCALAS.map(e =>
+  const escalas = loadEscalas();
+
+  const maxLiq = Math.max(...escalas.map(e =>
     useHourly ? e.hTrab * liqPH : e.turnos * avgLiq
   ), 1);
 
@@ -1313,8 +1340,7 @@ function renderSim() {
     ? `Taxa: ${fR(liqPH)}/h líquido · ${fR(brutPH)}/h bruto no app · ${totalHApp.toFixed(1)}h registradas (${n} dia${n!==1?'s':''})`
     : `Média: ${fR(avgLiq)}/dia líquido · ${fR(avgBrut)}/dia bruto (${n} dia${n!==1?'s':''}; registre horas no app para cálculo por hora)`;
 
-  document.getElementById('sim-cards').innerHTML = ESCALAS.map(e => {
-    // horas da escala × R$/h no app = projeção correta
+  document.getElementById('sim-cards').innerHTML = escalas.map((e, idx) => {
     const liqMes   = useHourly ? e.hTrab * liqPH  : e.turnos * avgLiq;
     const brutoMes = useHourly ? e.hTrab * brutPH : e.turnos * avgBrut;
     const pct      = Math.max(0, (liqMes / maxLiq) * 100);
@@ -1322,7 +1348,10 @@ function renderSim() {
       <div class="sched-card">
         <div class="sched-header">
           <span class="sched-name">${e.nome}</span>
-          <span class="sched-desc">${e.turnos} turnos/mês</span>
+          <span style="display:flex;align-items:center;gap:8px">
+            <span class="sched-desc">${e.turnos} turnos/mês</span>
+            <button class="del-btn" onclick="deleteEscala(${idx})" title="Excluir escala">✕</button>
+          </span>
         </div>
         <div class="sched-ciclo">${e.ciclo}</div>
         <div class="sched-time">
