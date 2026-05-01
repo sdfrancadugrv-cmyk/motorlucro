@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LaunchDash — Admin Panel</title>
+  <title>LaunchDash — Painel Admin</title>
   <style>
     :root {
       --bg:     #070910;
@@ -568,21 +568,21 @@
 <div class="overlay" id="add-modal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Add Project</div>
+      <div class="modal-title">Adicionar Projeto</div>
       <button class="modal-close" onclick="closeModal('add-modal')">✕</button>
     </div>
 
     <div class="form-group">
-      <label class="form-label">Project Name</label>
-      <input type="text" id="f-name" placeholder="e.g. GigProfit Pro">
+      <label class="form-label">Nome do Projeto</label>
+      <input type="text" id="f-name" placeholder="ex: GigProfit Pro">
     </div>
     <div class="form-group">
-      <label class="form-label">Description</label>
-      <textarea id="f-desc" placeholder="Short description"></textarea>
+      <label class="form-label">Descrição</label>
+      <textarea id="f-desc" placeholder="Descrição curta"></textarea>
     </div>
     <div class="row3">
       <div class="form-group">
-        <label class="form-label">Icon</label>
+        <label class="form-label">Ícone</label>
         <input type="text" id="f-icon" placeholder="🚀" maxlength="4">
       </div>
       <div class="form-group">
@@ -592,21 +592,21 @@
           <option value="Next.js">Next.js</option>
           <option value="React Native">React Native</option>
           <option value="Node.js">Node.js</option>
-          <option value="Other">Other</option>
+          <option value="Other">Outro</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Category</label>
-        <input type="text" id="f-cat" placeholder="SaaS, AI…">
+        <label class="form-label">Categoria</label>
+        <input type="text" id="f-cat" placeholder="SaaS, IA…">
       </div>
     </div>
     <div class="row3">
       <div class="form-group">
-        <label class="form-label">Price</label>
+        <label class="form-label">Preço</label>
         <input type="number" id="f-price" placeholder="37" min="0" step="0.01">
       </div>
       <div class="form-group">
-        <label class="form-label">Currency</label>
+        <label class="form-label">Moeda</label>
         <select id="f-currency">
           <option value="USD">USD</option>
           <option value="BRL">BRL</option>
@@ -616,26 +616,26 @@
       <div class="form-group">
         <label class="form-label">Status</label>
         <select id="f-status">
-          <option value="live">Live</option>
-          <option value="dev">In Dev</option>
-          <option value="draft">Draft</option>
-          <option value="internal">Internal</option>
+          <option value="live">No Ar</option>
+          <option value="dev">Em Dev</option>
+          <option value="draft">Rascunho</option>
+          <option value="internal">Interno</option>
         </select>
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">URL or File Path</label>
-      <input type="text" id="f-url" placeholder="myapp.html or https://...">
+      <label class="form-label">URL ou Caminho</label>
+      <input type="text" id="f-url" placeholder="meuapp.html ou https://...">
     </div>
     <div class="form-group">
-      <label class="form-label">Dev Command (optional)</label>
+      <label class="form-label">Comando Dev (opcional)</label>
       <input type="text" id="f-cmd" placeholder="npm run dev">
     </div>
     <div class="form-group">
-      <label class="form-label">Color</label>
+      <label class="form-label">Cor</label>
       <div class="color-opts" id="cp-add"></div>
     </div>
-    <button class="btn-save" onclick="saveApp()">Add Project</button>
+    <button class="btn-save" onclick="saveApp()">Adicionar Projeto</button>
   </div>
 </div>
 
@@ -643,21 +643,21 @@
 <div class="overlay" id="edit-modal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Edit Project</div>
+      <div class="modal-title">Editar Projeto</div>
       <button class="modal-close" onclick="closeModal('edit-modal')">✕</button>
     </div>
     <input type="hidden" id="e-id">
     <div class="form-group">
-      <label class="form-label">Project Name</label>
+      <label class="form-label">Nome do Projeto</label>
       <input type="text" id="e-name">
     </div>
     <div class="form-group">
-      <label class="form-label">Description</label>
+      <label class="form-label">Descrição</label>
       <textarea id="e-desc"></textarea>
     </div>
     <div class="row3">
       <div class="form-group">
-        <label class="form-label">Icon</label>
+        <label class="form-label">Ícone</label>
         <input type="text" id="e-icon" maxlength="4">
       </div>
       <div class="form-group">
@@ -667,21 +667,21 @@
           <option value="Next.js">Next.js</option>
           <option value="React Native">React Native</option>
           <option value="Node.js">Node.js</option>
-          <option value="Other">Other</option>
+          <option value="Other">Outro</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Category</label>
+        <label class="form-label">Categoria</label>
         <input type="text" id="e-cat">
       </div>
     </div>
     <div class="row3">
       <div class="form-group">
-        <label class="form-label">Price</label>
+        <label class="form-label">Preço</label>
         <input type="number" id="e-price" min="0" step="0.01">
       </div>
       <div class="form-group">
-        <label class="form-label">Currency</label>
+        <label class="form-label">Moeda</label>
         <select id="e-currency">
           <option value="USD">USD</option>
           <option value="BRL">BRL</option>
@@ -691,27 +691,27 @@
       <div class="form-group">
         <label class="form-label">Status</label>
         <select id="e-status">
-          <option value="live">Live</option>
-          <option value="dev">In Dev</option>
-          <option value="draft">Draft</option>
-          <option value="internal">Internal</option>
-          <option value="archived">Archived</option>
+          <option value="live">No Ar</option>
+          <option value="dev">Em Dev</option>
+          <option value="draft">Rascunho</option>
+          <option value="internal">Interno</option>
+          <option value="archived">Arquivado</option>
         </select>
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">URL or File Path</label>
+      <label class="form-label">URL ou Caminho</label>
       <input type="text" id="e-url">
     </div>
     <div class="form-group">
-      <label class="form-label">Dev Command</label>
+      <label class="form-label">Comando Dev</label>
       <input type="text" id="e-cmd">
     </div>
     <div class="form-group">
-      <label class="form-label">Color</label>
+      <label class="form-label">Cor</label>
       <div class="color-opts" id="cp-edit"></div>
     </div>
-    <button class="btn-save" onclick="updateApp()">Save Changes</button>
+    <button class="btn-save" onclick="updateApp()">Salvar Alterações</button>
   </div>
 </div>
 
@@ -719,14 +719,14 @@
 <div class="overlay" id="goal-modal">
   <div class="modal" style="max-width:360px">
     <div class="modal-header">
-      <div class="modal-title">Monthly Revenue Goal</div>
+      <div class="modal-title">Meta de Receita Mensal</div>
       <button class="modal-close" onclick="closeModal('goal-modal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">Target MRR (USD)</label>
-      <input type="number" id="g-input" placeholder="e.g. 5000" min="0">
+      <label class="form-label">Meta MRR (USD)</label>
+      <input type="number" id="g-input" placeholder="ex: 5000" min="0">
     </div>
-    <button class="btn-save" onclick="saveGoal()">Set Goal</button>
+    <button class="btn-save" onclick="saveGoal()">Definir Meta</button>
   </div>
 </div>
 
@@ -738,35 +738,35 @@
     <div class="sidebar-brand">
       <div class="brand-logo">🚀</div>
       <div class="brand-name">Launch<span>Dash</span></div>
-      <div class="brand-sub">App portfolio admin</div>
+      <div class="brand-sub">Painel de portfólio</div>
     </div>
 
     <div class="sidebar-nav">
-      <div class="nav-section">Views</div>
+      <div class="nav-section">Visões</div>
       <div class="nav-item active" onclick="setFilter('all', this)">
-        <span>📦</span> All Projects
+        <span>📦</span> Todos
         <span class="nav-badge" id="cnt-all">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('live', this)">
-        <span>🟢</span> Live
+        <span>🟢</span> No Ar
         <span class="nav-badge" id="cnt-live">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('dev', this)">
-        <span>🔨</span> In Dev
+        <span>🔨</span> Em Dev
         <span class="nav-badge" id="cnt-dev">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('draft', this)">
-        <span>📝</span> Draft
+        <span>📝</span> Rascunho
         <span class="nav-badge" id="cnt-draft">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('revenue', this)">
-        <span>💰</span> Revenue
+        <span>💰</span> Receita
         <span class="nav-badge" id="cnt-revenue">0</span>
       </div>
 
       <div class="nav-section">Stack</div>
       <div class="nav-item" onclick="setFilter('HTML', this)">
-        <span>🌐</span> HTML Apps
+        <span>🌐</span> HTML
         <span class="nav-badge" id="cnt-HTML">0</span>
       </div>
       <div class="nav-item" onclick="setFilter('Next.js', this)">
@@ -785,7 +785,7 @@
 
     <div class="sidebar-footer">
       <button class="btn-new-app" onclick="openModal('add-modal')">
-        + Add Project
+        + Novo Projeto
       </button>
     </div>
   </div>
@@ -793,32 +793,32 @@
   <!-- Main content -->
   <div class="main">
     <div class="topbar">
-      <h2 id="view-title">All Projects</h2>
+      <h2 id="view-title">Todos os Projetos</h2>
       <div class="search-wrap">
         <span class="search-ico">🔍</span>
-        <input class="search-input" placeholder="Search projects…" id="search-input" oninput="render()">
+        <input class="search-input" placeholder="Buscar projetos…" id="search-input" oninput="render()">
       </div>
     </div>
 
     <!-- KPIs -->
     <div class="kpi-bar">
       <div class="kpi">
-        <div class="kpi-label">Monthly MRR</div>
+        <div class="kpi-label">MRR Mensal</div>
         <div class="kpi-value green" id="k-mrr">$0</div>
-        <div class="kpi-sub" id="k-mrr-sub">USD subscribers</div>
+        <div class="kpi-sub" id="k-mrr-sub">assinantes</div>
       </div>
       <div class="kpi">
-        <div class="kpi-label">Subscribers</div>
+        <div class="kpi-label">Assinantes</div>
         <div class="kpi-value blue" id="k-subs">0</div>
-        <div class="kpi-sub">across all apps</div>
+        <div class="kpi-sub">em todos os apps</div>
       </div>
       <div class="kpi">
-        <div class="kpi-label">Projects</div>
+        <div class="kpi-label">Projetos</div>
         <div class="kpi-value purple" id="k-total">0</div>
-        <div class="kpi-sub" id="k-total-sub">0 live</div>
+        <div class="kpi-sub" id="k-total-sub">0 no ar</div>
       </div>
       <div class="kpi">
-        <div class="kpi-label">Annual Run Rate</div>
+        <div class="kpi-label">Receita Anual</div>
         <div class="kpi-value yellow" id="k-arr">$0</div>
         <div class="kpi-sub">MRR × 12</div>
       </div>
@@ -830,7 +830,7 @@
       <!-- Goal -->
       <div class="goal-row">
         <div class="goal-text">
-          <div class="goal-label">Monthly Revenue Goal</div>
+          <div class="goal-label">Meta de Receita Mensal</div>
           <div class="goal-numbers">
             <span class="g-cur" id="g-cur">$0</span>
             <span class="g-sep">/</span>
@@ -841,7 +841,7 @@
             <div class="goal-bar-fill" id="g-bar" style="width:0%"></div>
           </div>
         </div>
-        <button class="goal-edit-btn" onclick="openGoalModal()">Edit Goal</button>
+        <button class="goal-edit-btn" onclick="openGoalModal()">Editar Meta</button>
       </div>
 
       <!-- Project filters (mobile-friendly duplicate) -->
@@ -852,11 +852,11 @@
 
       <!-- Revenue chart -->
       <div class="section-header">
-        <div class="section-title">Revenue Breakdown (USD)</div>
+        <div class="section-title">Receita por Projeto (USD)</div>
       </div>
       <div class="chart-card" id="revenue-chart">
         <div style="text-align:center; padding: 20px; font-size:13px; color:var(--muted)">
-          Add subscribers to any paid app to see the revenue chart.
+          Adicione assinantes em algum app pago para ver o gráfico.
         </div>
       </div>
 
@@ -987,10 +987,10 @@ function setFilter(f, el) {
   document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
   if (el) { el.classList.add('active'); currentNavEl = el; }
   const titles = {
-    all: 'All Projects', live: 'Live Apps', dev: 'In Development',
-    draft: 'Drafts', revenue: 'Revenue Apps',
-    'HTML': 'HTML Apps', 'Next.js': 'Next.js Apps',
-    'React Native': 'Mobile Apps', 'Node.js': 'Node.js Projects'
+    all: 'Todos os Projetos', live: 'Apps no Ar', dev: 'Em Desenvolvimento',
+    draft: 'Rascunhos', revenue: 'Apps com Receita',
+    'HTML': 'Apps HTML', 'Next.js': 'Apps Next.js',
+    'React Native': 'Apps Mobile', 'Node.js': 'Projetos Node.js'
   };
   document.getElementById('view-title').textContent = titles[f] || 'Projects';
   render();
@@ -1039,10 +1039,10 @@ function renderKPIs(apps) {
   const live      = apps.filter(a => a.status === 'live').length;
 
   document.getElementById('k-mrr').textContent      = $(totalMRR);
-  document.getElementById('k-mrr-sub').textContent  = `from ${totalSubs} subscriber${totalSubs !== 1 ? 's' : ''}`;
+  document.getElementById('k-mrr-sub').textContent  = `${totalSubs} assinante${totalSubs !== 1 ? 's' : ''}`;
   document.getElementById('k-subs').textContent     = N(totalSubs);
   document.getElementById('k-total').textContent    = apps.length;
-  document.getElementById('k-total-sub').textContent= `${live} live`;
+  document.getElementById('k-total-sub').textContent= `${live} no ar`;
   document.getElementById('k-arr').textContent      = $(totalMRR * 12);
 }
 
@@ -1079,7 +1079,7 @@ function renderGrid(apps) {
   const grid = document.getElementById('apps-grid');
 
   if (!apps.length) {
-    grid.innerHTML = `<div class="empty"><div class="ico">🔍</div><p>No projects match your search.</p></div>`;
+    grid.innerHTML = `<div class="empty"><div class="ico">🔍</div><p>Nenhum projeto encontrado.</p></div>`;
     return;
   }
 
@@ -1095,7 +1095,7 @@ function renderGrid(apps) {
     const mrrStr  = a.price > 0 ? `${sym}${N(mrr)}` : 'Free';
     const priceStr= a.price > 0 ? `${sym}${N(a.price, 0)}/mo` : 'Free';
     const statusClass = { live:'s-live', dev:'s-dev', draft:'s-draft', internal:'s-internal', archived:'s-archived' }[a.status] || 's-draft';
-    const statusLabel = { live:'Live', dev:'In Dev', draft:'Draft', internal:'Internal', archived:'Archived' }[a.status] || a.status;
+    const statusLabel = { live:'No Ar', dev:'Em Dev', draft:'Rascunho', internal:'Interno', archived:'Arquivado' }[a.status] || a.status;
     const stackCls = STACK_CLASS[a.stack] || 'stack-html';
 
     return `
@@ -1119,17 +1119,17 @@ function renderGrid(apps) {
 
           <div class="card-metrics">
             <div class="met">
-              <div class="met-lbl">Price</div>
+              <div class="met-lbl">Preço</div>
               <div class="met-val mv-yellow">${priceStr}</div>
             </div>
             <div class="met">
-              <div class="met-lbl">Subs</div>
+              <div class="met-lbl">Assin.</div>
               <div class="met-val mv-blue">
                 <input class="subs-input" type="number" min="0"
                   value="${a.subs || 0}"
                   onchange="updateSubs(${a.id}, this.value)"
                   onblur="updateSubs(${a.id}, this.value)"
-                  title="Click to edit subscribers">
+                  title="Clique para editar">
               </div>
             </div>
             <div class="met">
@@ -1142,16 +1142,16 @@ function renderGrid(apps) {
           <div class="cmd-row">
             <span>$</span>
             <span class="cmd-text">${a.cmd}</span>
-            <button class="cmd-copy" onclick="copyCmd('${a.cmd.replace(/'/g,"\\'")}', this)" title="Copy command">📋</button>
+            <button class="cmd-copy" onclick="copyCmd('${a.cmd.replace(/'/g,"\\'")}', this)" title="Copiar comando">📋</button>
           </div>` : ''}
 
           <div class="card-actions">
             ${hasUrl
-              ? `<a class="btn-launch" href="${a.url}" target="${a.url.startsWith('http') ? '_blank' : '_self'}">🚀 Open App</a>`
-              : `<button class="btn-launch disabled" disabled>🔨 In Dev</button>`
+              ? `<a class="btn-launch" href="${a.url}" target="${a.url.startsWith('http') ? '_blank' : '_self'}">🚀 Abrir</a>`
+              : `<button class="btn-launch disabled" disabled>🔨 Em Dev</button>`
             }
-            <button class="btn-icon" onclick="openEditModal(${a.id})" title="Edit">✏️</button>
-            <button class="btn-icon del" onclick="deleteApp(${a.id})" title="Delete">🗑</button>
+            <button class="btn-icon" onclick="openEditModal(${a.id})" title="Editar">✏️</button>
+            <button class="btn-icon del" onclick="deleteApp(${a.id})" title="Excluir">🗑</button>
           </div>
         </div>
       </div>`;
@@ -1163,7 +1163,7 @@ function renderChart(apps) {
   const paid  = apps.filter(a => a.price > 0 && (a.subs || 0) > 0);
 
   if (!paid.length) {
-    chart.innerHTML = `<div style="text-align:center;padding:20px;font-size:13px;color:var(--muted)">Add subscribers to any paid app to see the revenue breakdown.</div>`;
+    chart.innerHTML = `<div style="text-align:center;padding:20px;font-size:13px;color:var(--muted)">Adicione assinantes em algum app pago para ver o gráfico.</div>`;
     return;
   }
 
@@ -1205,19 +1205,20 @@ function cycleStatus(id) {
   const app  = apps.find(a => a.id === id);
   if (!app) return;
   const idx   = STATUS_CYCLE.indexOf(app.status);
+  const labels = {live:'No Ar', dev:'Em Dev', draft:'Rascunho', internal:'Interno', archived:'Arquivado'};
   app.status  = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
   storeApps(apps);
   render();
-  toast(`${app.name} → ${app.status}`);
+  toast(`${app.name} → ${labels[app.status] || app.status}`);
 }
 
 function deleteApp(id) {
   const apps = loadApps();
   const app  = apps.find(a => a.id === id);
-  if (!confirm(`Delete "${app?.name}"?`)) return;
+  if (!confirm(`Excluir "${app?.name}"?`)) return;
   storeApps(apps.filter(a => a.id !== id));
   render();
-  toast('Project deleted');
+  toast('Projeto excluído');
 }
 
 function copyCmd(cmd, btn) {
@@ -1269,7 +1270,7 @@ document.querySelectorAll('.overlay').forEach(el =>
 
 function saveApp() {
   const name = document.getElementById('f-name').value.trim();
-  if (!name) { toast('⚠️ Name required'); return; }
+  if (!name) { toast('⚠️ Nome obrigatório'); return; }
 
   const apps = loadApps();
   apps.push({
@@ -1293,7 +1294,7 @@ function saveApp() {
   closeModal('add-modal');
   ['f-name','f-desc','f-icon','f-cat','f-url','f-cmd','f-price'].forEach(i => (document.getElementById(i).value = ''));
   render();
-  toast('✅ Project added!');
+  toast('✅ Projeto adicionado!');
 }
 
 function openEditModal(id) {
@@ -1324,7 +1325,7 @@ function updateApp() {
   if (idx === -1) return;
 
   const name = document.getElementById('e-name').value.trim();
-  if (!name) { toast('⚠️ Name required'); return; }
+  if (!name) { toast('⚠️ Nome obrigatório'); return; }
 
   apps[idx] = {
     ...apps[idx],
@@ -1344,7 +1345,7 @@ function updateApp() {
   storeApps(apps);
   closeModal('edit-modal');
   render();
-  toast('✅ Updated!');
+  toast('✅ Atualizado!');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1359,7 +1360,7 @@ function saveGoal() {
   localStorage.setItem(GOAL_KEY, v.toString());
   closeModal('goal-modal');
   renderGoal(loadApps());
-  toast('Goal updated!');
+  toast('Meta atualizada!');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
