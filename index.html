@@ -754,7 +754,7 @@
         </div>
         <div class="row2">
           <div>
-            <label class="inp-label">Horas no app (por turno)</label>
+            <label class="inp-label">Horas na rua (por turno)</label>
             <input type="number" id="new-escala-ht" placeholder="Ex: 10" min="1" max="24">
           </div>
           <div>
@@ -771,7 +771,7 @@
       <div class="custom-box">
         <div class="row2">
           <div>
-            <label class="inp-label">Horas no app (por turno)</label>
+            <label class="inp-label">Horas na rua (por turno)</label>
             <input type="number" id="sim-ht" placeholder="Ex: 10" min="1" max="24" oninput="simCustom()">
           </div>
           <div>
@@ -1388,11 +1388,11 @@ function addEscala() {
   const nome = document.getElementById('new-escala-nome').value.trim();
   const ht   = parseFloat(document.getElementById('new-escala-ht').value) || 0;
   const hd   = parseFloat(document.getElementById('new-escala-hd').value) || 0;
-  if (!nome || ht <= 0) { toast('Informe o nome e as horas no app'); return; }
+  if (!nome || ht <= 0) { toast('Informe o nome e as horas na rua'); return; }
   const cicloH = ht + hd;
   const turnos = cicloH > 0 ? Math.floor(HORAS_MES / cicloH) : 0;
   const list   = loadEscalas();
-  list.push({ nome, ciclo: ht + 'h no app · ' + hd + 'h folga', turnos, hTrab: turnos * ht, hFolga: turnos * hd });
+  list.push({ nome, ciclo: ht + 'h na rua · ' + hd + 'h folga', turnos, hTrab: turnos * ht, hFolga: turnos * hd });
   saveEscalas(list);
   document.getElementById('new-escala-nome').value = '';
   document.getElementById('new-escala-ht').value   = '';
@@ -1430,25 +1430,25 @@ function renderSim() {
   if (!days.length) { empty.style.display='block'; cont.style.display='none'; return; }
   empty.style.display='none'; cont.style.display='block';
 
-  const totalHApp = days.reduce((s,d)=>s+d.hApp, 0);
-  const totalLiq  = days.reduce((s,d)=>s+d.liq,  0);
-  const totalBrut = days.reduce((s,d)=>s+d.tG,   0);
-  const n         = days.length;
+  const totalHReal = days.reduce((s,d)=>s+d.hReal, 0);
+  const totalLiq   = days.reduce((s,d)=>s+d.liq,   0);
+  const totalBrut  = days.reduce((s,d)=>s+d.tG,    0);
+  const n          = days.length;
 
-  const liqPH  = totalHApp > 0 ? totalLiq  / totalHApp : 0;
-  const brutPH = totalHApp > 0 ? totalBrut / totalHApp : 0;
+  const liqPH  = totalHReal > 0 ? totalLiq  / totalHReal : 0;
+  const brutPH = totalHReal > 0 ? totalBrut / totalHReal : 0;
 
   const escalas = loadEscalas();
 
   const baseEl = document.getElementById('sim-base');
-  if (totalHApp === 0) {
-    if (baseEl) baseEl.textContent = 'Registre as horas no app em cada dia para ver a projeção.';
+  if (totalHReal === 0) {
+    if (baseEl) baseEl.textContent = 'Registre o horário de início e fim em cada dia para ver a projeção.';
     document.getElementById('sim-cards').innerHTML = '';
     return;
   }
 
   if (baseEl) baseEl.textContent =
-    `Taxa: ${fR(liqPH)}/h líquido · ${fR(brutPH)}/h bruto · ${totalHApp.toFixed(1)}h no app registradas (${n} dia${n!==1?'s':''})`;
+    `Taxa: ${fR(liqPH)}/h líquido · ${fR(brutPH)}/h bruto · ${totalHReal.toFixed(1)}h reais registradas (${n} dia${n!==1?'s':''})`;
 
   const maxLiq = Math.max(...escalas.map(e => e.hTrab * liqPH), 1);
 
@@ -1469,7 +1469,7 @@ function renderSim() {
         <div class="sched-time">
           <div class="sched-ti">
             <div class="sched-ti-val blue">${e.hTrab}h</div>
-            <div class="sched-ti-lbl">no app/mês</div>
+            <div class="sched-ti-lbl">na rua/mês</div>
           </div>
           <div class="sched-ti-sep">|</div>
           <div class="sched-ti">
@@ -1506,10 +1506,11 @@ function simCustom() {
   const totalBrut = days.reduce((s,d)=>s+d.tG,   0);
   const n         = days.length;
 
-  if (totalHApp === 0) { res.style.display='none'; toast('Registre horas no app para simular'); return; }
+  const totalHReal2 = days.reduce((s,d)=>s+d.hReal, 0);
+  if (totalHReal2 === 0) { res.style.display='none'; toast('Registre início e fim do serviço para simular'); return; }
 
-  const liqPH  = totalLiq  / totalHApp;
-  const brutPH = totalBrut / totalHApp;
+  const liqPH  = days.reduce((s,d)=>s+d.liq, 0) / totalHReal2;
+  const brutPH = days.reduce((s,d)=>s+d.tG,  0) / totalHReal2;
 
   const ciclo  = ht + hd;
   const turnos = ciclo > 0 ? Math.floor(HORAS_MES/ciclo) : 0;
@@ -1517,7 +1518,7 @@ function simCustom() {
   const hFolga = turnos * hd;
 
   document.getElementById('sc-turnos').textContent = turnos;
-  document.getElementById('sc-horas').textContent  = fmt(hTrab,0) + 'h no app · ' + fmt(hFolga,0) + 'h folga';
+  document.getElementById('sc-horas').textContent  = fmt(hTrab,0) + 'h na rua · ' + fmt(hFolga,0) + 'h folga';
   document.getElementById('sc-bruto').textContent  = fR(hTrab * brutPH);
   document.getElementById('sc-liq').textContent    = fR(hTrab * liqPH);
   res.style.display = 'block';
