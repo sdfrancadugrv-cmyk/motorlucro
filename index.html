@@ -1197,10 +1197,12 @@ function computedDays(period) {
     const km    = parseFloat(d.km)              || 0;
     const cons  = parseFloat(d.consumo)         || 0;
     const prec  = parseFloat(d.precoCombustivel)|| 0;
-    const ckm   = cons > 0 ? prec / cons : 0;
-    const cReal = ckm > 0 && km > 0 ? ckm * km : null;
-    const liq   = cReal !== null ? tG - cReal - tO : tG - tGas;
-    return { ...d, tG, tC, tO, tGas, liq,
+    const ckm      = cons > 0 ? prec / cons : 0;
+    const cReal    = ckm > 0 && km > 0 ? ckm * km : null;
+    const combReal = cReal !== null ? cReal : tC;
+    const gasReal  = combReal + tO;
+    const liq      = tG - gasReal;
+    return { ...d, tG, tC, tO, tGas, combReal, gasReal, liq,
              hApp:  parseFloat(d.horasApp)  || 0,
              hReal: parseFloat(d.horasReal) || 0, km };
   }).filter(d => d.tG > 0 || d.tC > 0 || d.tO > 0 || d.km > 0);
@@ -1215,13 +1217,13 @@ function renderRelatorio() {
   if (!allExist) { empty.style.display='block'; cont.style.display='none'; return; }
   empty.style.display='none'; cont.style.display='block';
 
-  const tLiq  = days.reduce((s,d)=>s+d.liq, 0);
-  const tBrut = days.reduce((s,d)=>s+d.tG,  0);
-  const tComb = days.reduce((s,d)=>s+d.tC,  0);
-  const tOutr = days.reduce((s,d)=>s+d.tO,  0);
-  const tGas  = tComb + tOutr;
+  const tLiq      = days.reduce((s,d)=>s+d.liq,      0);
+  const tBrut     = days.reduce((s,d)=>s+d.tG,       0);
+  const tCombReal = days.reduce((s,d)=>s+d.combReal, 0);
+  const tOutr     = days.reduce((s,d)=>s+d.tO,       0);
+  const tGasReal  = tCombReal + tOutr;
   const diasComGanho = days.filter(d=>d.tG>0).length;
-  const media = diasComGanho > 0 ? tLiq / diasComGanho : 0;
+  const media  = diasComGanho > 0 ? tLiq / diasComGanho : 0;
   const melhor = days.reduce((b,d)=>d.liq>b ? d.liq : b, -Infinity);
 
   document.getElementById('r-total').textContent  = fR(tLiq);
@@ -1231,7 +1233,7 @@ function renderRelatorio() {
   document.getElementById('r-melhor').textContent = melhor > -Infinity ? fR(melhor) : '—';
 
   drawBarChart(days);
-  drawBreakdown(tBrut, tComb, tOutr, tGas);
+  drawBreakdown(tBrut, tCombReal, tOutr, tGasReal);
   renderDayList(days);
 }
 
@@ -1354,8 +1356,8 @@ function renderDayList(days) {
   el.innerHTML = sorted.map(d => {
     const cor  = d.liq >= 0 ? 'green' : 'red';
     const meta = [];
-    if (d.tG   > 0) meta.push('Bruto ' + fR(d.tG));
-    if (d.tGas > 0) meta.push('Gastos ' + fR(d.tGas));
+    if (d.tG      > 0) meta.push('Bruto ' + fR(d.tG));
+    if (d.gasReal > 0) meta.push('Gastos ' + fR(d.gasReal));
     if (d.hApp  > 0) meta.push(fmt(d.hApp,1) + 'h app');
     if (d.km    > 0) meta.push(fmt(d.km,0) + ' km');
     const dt = new Date(d.date + 'T12:00:00');
