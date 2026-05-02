@@ -424,6 +424,62 @@
       pointer-events: none;
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Calendário ── */
+    .cal-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 10px 14px;
+      margin-bottom: 10px;
+    }
+    .cal-month-label { font-size: 15px; font-weight: 700; color: var(--text); }
+    .cal-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .cal-dow-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+      margin-bottom: 3px;
+    }
+    .cal-dow {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text2);
+      padding: 4px 0;
+      text-transform: uppercase;
+    }
+    .cal-cells {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+    }
+    .cal-cell {
+      background: var(--surface);
+      border: 1px solid transparent;
+      border-radius: var(--rs);
+      padding: 5px 4px;
+      min-height: 56px;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .cal-cell:hover { border-color: var(--accent); }
+    .cal-cell.cal-empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
+    .cal-cell.cal-today { border-color: var(--accent); }
+    .cal-cell.cal-future { opacity: .4; cursor: default; pointer-events: none; }
+    .cal-day-num { font-size: 11px; color: var(--text2); font-weight: 600; margin-bottom: 3px; }
+    .cal-today .cal-day-num { color: var(--accent); }
+    .cal-day-liq { font-size: 11px; font-weight: 700; line-height: 1.2; }
+    .cal-day-brut { font-size: 9px; color: var(--text2); margin-top: 1px; }
+    .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text2); margin: 4px auto 0; }
   </style>
 </head>
 <body>
@@ -436,6 +492,7 @@
 <div class="tabs">
   <div class="tab active" onclick="goTab('hoje')">Hoje</div>
   <div class="tab" onclick="goTab('relatorio')">Relatório</div>
+  <div class="tab" onclick="goTab('calendario')">Calendário</div>
   <div class="tab" onclick="goTab('simulador')">Simulador</div>
 </div>
 
@@ -649,6 +706,30 @@
 
   </div>
 
+  <!-- ── CALENDÁRIO ───────────────────────────────────────── -->
+  <div class="page" id="page-calendario">
+
+    <div class="cal-nav">
+      <button class="nav-btn" onclick="calPrev()">&#8592;</button>
+      <div class="cal-month-label" id="cal-month-label">—</div>
+      <button class="nav-btn" onclick="calNext()">→</button>
+    </div>
+
+    <div class="cal-summary" id="cal-summary"></div>
+
+    <div class="cal-dow-row">
+      <div class="cal-dow">Dom</div>
+      <div class="cal-dow">Seg</div>
+      <div class="cal-dow">Ter</div>
+      <div class="cal-dow">Qua</div>
+      <div class="cal-dow">Qui</div>
+      <div class="cal-dow">Sex</div>
+      <div class="cal-dow">Sáb</div>
+    </div>
+    <div class="cal-cells" id="cal-cells"></div>
+
+  </div>
+
   <!-- ── SIMULADOR ──────────────────────────────────────── -->
   <div class="page" id="page-simulador">
 
@@ -813,12 +894,13 @@ function toast(msg) {
 }
 
 // ── Tabs ───────────────────────────────────────────────────
-const TABS = ['hoje','relatorio','simulador'];
+const TABS = ['hoje','relatorio','calendario','simulador'];
 function goTab(name) {
   document.querySelectorAll('.tab').forEach((t,i)  => t.classList.toggle('active', TABS[i]===name));
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id==='page-'+name));
-  if (name==='relatorio') renderRelatorio();
-  if (name==='simulador') renderSim();
+  if (name==='relatorio')  renderRelatorio();
+  if (name==='calendario') renderCalendar();
+  if (name==='simulador')  renderSim();
 }
 
 // ── Day navigation ─────────────────────────────────────────
@@ -1443,6 +1525,103 @@ function simCustom() {
   document.getElementById('sc-bruto').textContent  = fR(useH ? hTrab * brutPH : (totalBrut/n) * turnos);
   document.getElementById('sc-liq').textContent    = fR(useH ? hTrab * liqPH  : (totalLiq/n)  * turnos);
   res.style.display = 'block';
+}
+
+// ── Calendário ─────────────────────────────────────────────
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+let calYear  = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+function calPrev() {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+function calNext() {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  document.getElementById('cal-month-label').textContent = MESES[calMonth] + ' ' + calYear;
+
+  const all    = loadDays();
+  const today  = todayStr();
+  const first  = new Date(calYear, calMonth, 1).getDay();
+  const total  = new Date(calYear, calMonth + 1, 0).getDate();
+
+  let monthLiq = 0, monthBrut = 0, diasTrab = 0;
+
+  // Pré-calcula dados do mês para o resumo
+  for (let d = 1; d <= total; d++) {
+    const ds = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const day = all[ds];
+    if (!day) continue;
+    const tG   = day.ganhos.reduce((s,e)=>s+e.valor,0);
+    const tC   = day.comb.reduce((s,e)=>s+e.valor,0);
+    const tO   = day.outros.reduce((s,e)=>s+e.valor,0);
+    const km   = parseFloat(day.km) || 0;
+    const cons = parseFloat(day.consumo) || 0;
+    const prec = parseFloat(day.precoCombustivel) || 0;
+    const ckm  = cons > 0 ? prec / cons : 0;
+    const cr   = ckm > 0 && km > 0 ? ckm * km : null;
+    const liq  = cr !== null ? tG - cr - tO : tG - tC - tO;
+    if (tG > 0 || tC > 0 || tO > 0 || km > 0) { monthLiq += liq; monthBrut += tG; diasTrab++; }
+  }
+
+  document.getElementById('cal-summary').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Líquido do mês</div>
+      <div class="stat-value ${monthLiq >= 0 ? 'green' : 'red'}">${diasTrab > 0 ? fR(monthLiq) : '—'}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Bruto do mês</div>
+      <div class="stat-value blue">${diasTrab > 0 ? fR(monthBrut) : '—'}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Dias trabalhados</div>
+      <div class="stat-value">${diasTrab}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Média diária</div>
+      <div class="stat-value">${diasTrab > 0 ? fR(monthLiq / diasTrab) : '—'}</div>
+    </div>`;
+
+  const cells = [];
+  for (let i = 0; i < first; i++) cells.push('<div class="cal-cell cal-empty"></div>');
+
+  for (let d = 1; d <= total; d++) {
+    const ds      = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const isToday = ds === today;
+    const isFut   = ds > today;
+    const day     = all[ds];
+    let cls       = 'cal-cell' + (isToday ? ' cal-today' : '') + (isFut ? ' cal-future' : '');
+    let inner     = `<div class="cal-day-num">${d}</div>`;
+
+    if (day) {
+      const tG   = day.ganhos.reduce((s,e)=>s+e.valor,0);
+      const tC   = day.comb.reduce((s,e)=>s+e.valor,0);
+      const tO   = day.outros.reduce((s,e)=>s+e.valor,0);
+      const km   = parseFloat(day.km) || 0;
+      const cons = parseFloat(day.consumo) || 0;
+      const prec = parseFloat(day.precoCombustivel) || 0;
+      const ckm  = cons > 0 ? prec / cons : 0;
+      const cr   = ckm > 0 && km > 0 ? ckm * km : null;
+      const liq  = cr !== null ? tG - cr - tO : tG - tC - tO;
+      if (tG > 0 || tC > 0 || tO > 0 || km > 0) {
+        const cor = liq >= 0 ? 'green' : 'red';
+        inner += `<div class="cal-day-liq ${cor}">${fR(liq)}</div>`;
+        if (tG > 0) inner += `<div class="cal-day-brut">${fR(tG)}</div>`;
+      } else {
+        inner += `<div class="cal-dot"></div>`;
+      }
+    }
+
+    cells.push(`<div class="${cls}" onclick="openDay('${ds}')">${inner}</div>`);
+  }
+
+  document.getElementById('cal-cells').innerHTML = cells.join('');
 }
 
 // ── Init ───────────────────────────────────────────────────
