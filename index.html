@@ -975,6 +975,16 @@ function autoSave() {
   saveDay(curDate, curDay);
   updateHrealDisplay();
   recalc(curDay);
+  refreshReports();
+}
+
+function refreshReports() {
+  const active = document.querySelector('.page.active');
+  if (!active) return;
+  const id = active.id;
+  if (id === 'page-relatorio')  renderRelatorio();
+  if (id === 'page-simulador')  renderSim();
+  if (id === 'page-calendario') renderCalendar();
 }
 
 // ── Recalc ─────────────────────────────────────────────────
@@ -1079,6 +1089,7 @@ function deleteEntry(type, id) {
   curDay[type] = curDay[type].filter(e => e.id !== id);
   saveDay(curDate, curDay);
   recalc(curDay);
+  refreshReports();
   toast('Entrada removida');
 }
 
@@ -1087,6 +1098,7 @@ function limparDia() {
   deleteDay(curDate);
   curDay = emptyDay(curDate);
   renderDayPage();
+  refreshReports();
   toast('Dia limpo');
 }
 
@@ -1151,6 +1163,7 @@ function confirmModal() {
   curDay[key].push(entry);
   saveDay(curDate, curDay);
   recalc(curDay);
+  refreshReports();
 
   const labels = { ganho:'✅ Ganho registrado', comb:'✅ Abastecimento salvo', outro:'✅ Gasto adicionado' };
   closeModal();
